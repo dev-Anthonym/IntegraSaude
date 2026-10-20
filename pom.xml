@@ -1,0 +1,49 @@
+<!-- Início do arquivo de configuração do Maven (POM - Project Object Model). 
+     Ele gerencia dependências, versões e a forma como o projeto é construído. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion> <!-- Versão do modelo do POM (padrão do Maven) -->
+
+    <!-- Identificação do nosso grupo/pacote principal alinhado com a ODS 3 -->
+    <groupId>com.integrasaude</groupId>
+    
+    <!-- Nome do artefato (o nome do projeto/arquivo gerado) -->
+    <artifactId>integra-saude</artifactId>
+    
+    <!-- Versão atual do nosso sistema -->
+    <version>1.0-SNAPSHOT</version>
+
+    <!-- Bloco de propriedades globais do projeto -->
+    <properties>
+        <!-- Define que o código usa e compila com a versão 25 do Java (a que você tem na sua máquina) -->
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        
+        <!-- Define que os arquivos do projeto usam a codificação de caracteres UTF-8 (para aceitar acentos como ç, ã, é) -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- Bloco onde declaramos as bibliotecas externas que o projeto vai usar -->
+    <dependencies>
+        <!-- Dependência do JUnit 5: biblioteca utilizada para escrever e rodar os nossos testes unitários (TDD) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope> <!-- Indica que essa biblioteca só será usada na hora de rodar os testes, não vai para produção -->
+        </dependency>
+    </dependencies>
+
+    <!-- Bloco de configurações de construção (build) e plugins -->
+    <build>
+        <plugins>
+            <!-- Plugin Surefire: é o plugin do Maven responsável por encontrar e executar os testes automatizados (JUnit) no terminal -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
