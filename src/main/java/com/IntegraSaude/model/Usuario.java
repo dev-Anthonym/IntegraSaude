@@ -6,7 +6,8 @@ public class Usuario {
     private String nome;
     private String email;
     private String senhaHash;
-    private Perfil perfil; // Utiliza o enum Perfil (PACIENTE ou RESPONSAVEL)
+    private Perfil perfil; 
+    private Long responsavelId;
 
     // Construtor completo para instanciar o utilizador
     public Usuario(Long id, String nome, String email, String senhaHash, Perfil perfil) {
@@ -32,4 +33,11 @@ public class Usuario {
 
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+
+    public Long getResponsavelId() { return responsavelId; }
+
+    public void setResponsavelId(Long responsavelId) {
+        this.responsavelId = responsavelId;
+    }
+
 }

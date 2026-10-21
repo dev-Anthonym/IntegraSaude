@@ -34,4 +34,16 @@ public class UsuarioRepositoryMemoria implements UsuarioRepository {
                 .filter(u -> u.getId().equals(id))
                 .findFirst();
     }
+
+    @Override
+    public void atualizar(Usuario usuario) {
+    if (usuario != null && usuario.getId() != null) {
+        for (int i = 0; i < usuarios.size(); i++) {
+            if (usuarios.get(i).getId().equals(usuario.getId())) {
+                usuarios.set(i, usuario);
+                return;
+                }
+            }
+        }
+    }
 }
