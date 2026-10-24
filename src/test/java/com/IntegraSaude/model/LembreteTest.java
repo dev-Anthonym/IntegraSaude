@@ -1,3 +1,5 @@
+package com.IntegraSaude.model;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -36,5 +38,35 @@ class LembreteTest {
         lembrete.marcarComoPerdido();
 
         assertEquals(StatusLembrete.PERDIDO, lembrete.getStatus());
+    }
+
+    @Test
+    void deveRejeitarConfirmacaoDeLembreteJaConfirmado() {
+        Lembrete lembrete = new Lembrete(
+                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
+                LocalDateTime.of(2026, 10, 24, 8, 0));
+        lembrete.confirmar();
+
+        assertThrows(TransicaoInvalidaException.class, lembrete::confirmar);
+    }
+
+    @Test
+    void deveRejeitarConfirmacaoDeLembretePerdido() {
+        Lembrete lembrete = new Lembrete(
+                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
+                LocalDateTime.of(2026, 10, 24, 8, 0));
+        lembrete.marcarComoPerdido();
+
+        assertThrows(TransicaoInvalidaException.class, lembrete::confirmar);
+    }
+
+    @Test
+    void deveRejeitarMarcarComoPerdidoLembreteConfirmado() {
+        Lembrete lembrete = new Lembrete(
+                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
+                LocalDateTime.of(2026, 10, 24, 8, 0));
+        lembrete.confirmar();
+
+        assertThrows(TransicaoInvalidaException.class, lembrete::marcarComoPerdido);
     }
 }
