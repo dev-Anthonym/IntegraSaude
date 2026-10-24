@@ -51,12 +51,16 @@ class HistoricoRepositoryJdbcTest {
 
     @Test
     void deveCarregarDadosIniciaisDoModulo() throws SQLException {
-        BancoTeste.executarScript(fabrica, "database/04_lembretes_dados.sql");
+        FabricaConexao bancoLimpo = BancoTeste.criar();
+        BancoTeste.executarScript(bancoLimpo, "database/04_lembretes_dados.sql");
+        LembreteRepository lembretes = new LembreteRepositoryJdbc(bancoLimpo);
+        HistoricoRepository historico = new HistoricoRepositoryJdbc(bancoLimpo);
 
-        LembreteRepository lembretes = new LembreteRepositoryJdbc(fabrica);
+        List<Lembrete> lembretesDoPaciente = lembretes.listarPorPaciente(1L);
 
-        assertEquals(4, lembretes.listarPorPaciente(1L).size());
-        assertTrue(lembretes.listarPorPaciente(1L).stream()
-                .anyMatch(l -> !historicoRepository.listarPorLembrete(l.getId()).isEmpty()));
+        assertEquals(4, lembretesDoPaciente.size());
+        assertEquals(List.of(TipoEvento.GERADO, TipoEvento.PERDIDO, TipoEvento.ALERTA_ENVIADO),
+                historico.listarPorLembrete(lembretesDoPaciente.get(1).getId()).stream()
+                        .map(EventoHistorico::getTipoEvento).toList());
     }
 }
