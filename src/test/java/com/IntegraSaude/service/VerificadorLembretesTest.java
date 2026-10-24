@@ -1,5 +1,6 @@
 package com.IntegraSaude.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -95,6 +96,19 @@ class VerificadorLembretesTest {
         verificador.verificar(HORARIO.plusMinutes(1));
 
         assertEquals(1, notificador.enviosPara(paciente).size());
+    }
+
+    @Test
+    void deveContinuarAvisandoOutrosPacientesSeUmEnvioFalhar() {
+        Usuario outroPaciente = salvarUsuario("Bruno Lima", Perfil.PACIENTE);
+        salvarLembrete();
+        lembreteRepository.salvar(new Lembrete(null, outroPaciente.getId(),
+                TipoLembrete.MEDICAMENTO, 6L, "Metformina 850mg", HORARIO));
+        notificador.falharPara(paciente);
+
+        assertDoesNotThrow(() -> verificador.verificar(HORARIO));
+
+        assertEquals(1, notificador.enviosPara(outroPaciente).size());
     }
 
     private Usuario salvarUsuario(String nome, Perfil perfil) {
