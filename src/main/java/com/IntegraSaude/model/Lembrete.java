@@ -25,6 +25,10 @@ public class Lembrete {
         this.status = StatusLembrete.CONFIRMADO;
     }
 
+    public void marcarComoPerdido() {
+        this.status = StatusLembrete.PERDIDO;
+    }
+
     public Long getId() { return id; }
     public Long getPacienteId() { return pacienteId; }
     public TipoLembrete getTipo() { return tipo; }
