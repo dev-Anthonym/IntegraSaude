@@ -15,4 +15,15 @@ class LembreteTest {
 
         assertEquals(StatusLembrete.PENDENTE, lembrete.getStatus());
     }
+
+    @Test
+    void deveConfirmarLembretePendente() {
+        Lembrete lembrete = new Lembrete(
+                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
+                LocalDateTime.of(2026, 10, 24, 8, 0));
+
+        lembrete.confirmar();
+
+        assertEquals(StatusLembrete.CONFIRMADO, lembrete.getStatus());
+    }
 }
