@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 // Gera os lembretes do dia a partir dos medicamentos e consultas do paciente
 public class GeradorLembretes {
@@ -48,8 +49,8 @@ public class GeradorLembretes {
         for (ConsultaAgendada consulta : fonteConsultas.listarDoPaciente(pacienteId)) {
             LocalDateTime horario = consulta.dataHora().minus(antecedenciaConsulta);
             if (horario.toLocalDate().equals(dia)) {
-                gerados.add(criar(pacienteId, TipoLembrete.CONSULTA, consulta.id(),
-                        consulta.descricao(), horario));
+                criarSeNaoExistir(pacienteId, TipoLembrete.CONSULTA, consulta.id(),
+                        consulta.descricao(), horario).ifPresent(gerados::add);
             }
         }
         return gerados;
@@ -58,15 +59,21 @@ public class GeradorLembretes {
     private List<Lembrete> gerarDoMedicamento(Long pacienteId, MedicamentoAgendado medicamento, LocalDate dia) {
         List<Lembrete> gerados = new ArrayList<>();
         for (LocalTime horario : horariosMedicamento.horariosDoDia(medicamento.id(), dia)) {
-            gerados.add(criar(pacienteId, TipoLembrete.MEDICAMENTO, medicamento.id(),
-                    medicamento.nome(), dia.atTime(horario)));
+            criarSeNaoExistir(pacienteId, TipoLembrete.MEDICAMENTO, medicamento.id(),
+                    medicamento.nome(), dia.atTime(horario)).ifPresent(gerados::add);
         }
         return gerados;
     }
 
-    private Lembrete criar(Long pacienteId, TipoLembrete tipo, Long itemId,
-                           String descricao, LocalDateTime horario) {
+    // RN08: não cria lembrete duplicado para o mesmo item e o mesmo horário
+    private Optional<Lembrete> criarSeNaoExistir(Long pacienteId, TipoLembrete tipo, Long itemId,
+                                                 String descricao, LocalDateTime horario) {
+        boolean jaExiste = lembreteRepository.listarPorPaciente(pacienteId).stream()
+                .anyMatch(l -> l.mesmoAgendamento(tipo, itemId, horario));
+        if (jaExiste) {
+            return Optional.empty();
+        }
         Lembrete lembrete = new Lembrete(null, pacienteId, tipo, itemId, descricao, horario);
-        return lembreteRepository.salvar(lembrete);
+        return Optional.of(lembreteRepository.salvar(lembrete));
     }
 }

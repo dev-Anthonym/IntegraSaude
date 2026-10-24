@@ -63,6 +63,13 @@ public class Lembrete {
         return agora.isAfter(horarioPrevisto.plus(limite));
     }
 
+    // RN08: identifica lembretes do mesmo item no mesmo horário
+    public boolean mesmoAgendamento(TipoLembrete outroTipo, Long outroItemId, LocalDateTime outroHorario) {
+        return tipo == outroTipo
+                && itemId.equals(outroItemId)
+                && horarioPrevisto.equals(outroHorario);
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getPacienteId() { return pacienteId; }
