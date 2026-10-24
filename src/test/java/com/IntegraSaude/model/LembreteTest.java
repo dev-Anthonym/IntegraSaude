@@ -26,4 +26,15 @@ class LembreteTest {
 
         assertEquals(StatusLembrete.CONFIRMADO, lembrete.getStatus());
     }
+
+    @Test
+    void deveMarcarComoPerdidoLembretePendente() {
+        Lembrete lembrete = new Lembrete(
+                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
+                LocalDateTime.of(2026, 10, 24, 8, 0));
+
+        lembrete.marcarComoPerdido();
+
+        assertEquals(StatusLembrete.PERDIDO, lembrete.getStatus());
+    }
 }
