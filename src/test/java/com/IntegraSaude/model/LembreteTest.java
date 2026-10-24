@@ -84,8 +84,56 @@ class LembreteTest {
         assertFalse(lembrete.estaVencido(relogio, LIMITE));
     }
 
+    @Test
+    void deveEstarVencidoNoMomentoInformado() {
+        Lembrete lembrete = criarLembrete();
+
+        assertTrue(lembrete.estaVencidoEm(HORARIO_PREVISTO.plusMinutes(31), LIMITE));
+        assertFalse(lembrete.estaVencidoEm(HORARIO_PREVISTO.plusMinutes(30), LIMITE));
+    }
+
+    @Test
+    void deveGuardarDescricaoDoItem() {
+        Lembrete lembrete = criarLembrete();
+
+        assertEquals("Losartana 50mg", lembrete.getDescricao());
+    }
+
+    @Test
+    void deveNascerSemAlertaEnviado() {
+        Lembrete lembrete = criarLembrete();
+
+        assertFalse(lembrete.isAlertaEnviado());
+    }
+
+    @Test
+    void deveMarcarAlertaEnviadoEmLembretePerdido() {
+        Lembrete lembrete = criarLembrete();
+        lembrete.marcarComoPerdido();
+
+        lembrete.marcarAlertaEnviado();
+
+        assertTrue(lembrete.isAlertaEnviado());
+    }
+
+    @Test
+    void deveRejeitarAlertaDeLembreteQueNaoEstaPerdido() {
+        Lembrete lembrete = criarLembrete();
+
+        assertThrows(TransicaoInvalidaException.class, lembrete::marcarAlertaEnviado);
+    }
+
+    @Test
+    void deveRejeitarSegundoAlertaDoMesmoLembrete() {
+        Lembrete lembrete = criarLembrete();
+        lembrete.marcarComoPerdido();
+        lembrete.marcarAlertaEnviado();
+
+        assertThrows(TransicaoInvalidaException.class, lembrete::marcarAlertaEnviado);
+    }
+
     private Lembrete criarLembrete() {
-        return new Lembrete(1L, 10L, TipoLembrete.MEDICAMENTO, 5L, HORARIO_PREVISTO);
+        return new Lembrete(1L, 10L, TipoLembrete.MEDICAMENTO, 5L, "Losartana 50mg", HORARIO_PREVISTO);
     }
 
     private Clock relogioEm(LocalDateTime momento) {
