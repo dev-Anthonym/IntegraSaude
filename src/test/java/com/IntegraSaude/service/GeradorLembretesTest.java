@@ -113,6 +113,28 @@ class GeradorLembretesTest {
         assertEquals(DIA.atTime(23, 30), gerados.get(0).getHorarioPrevisto());
     }
 
+    @Test
+    void naoDeveGerarLembreteDuplicado() {
+        cadastrarMedicamento(new MedicamentoAgendado(5L, "Losartana 50mg", DIA, null), LocalTime.of(8, 0));
+        cadastrarConsulta(new ConsultaAgendada(7L, "Consulta com cardiologista", DIA.atTime(14, 0)));
+        gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        List<Lembrete> geradosNaSegundaVez = gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        assertTrue(geradosNaSegundaVez.isEmpty());
+        assertEquals(2, repository.listarPorPaciente(PACIENTE_ID).size());
+    }
+
+    @Test
+    void naoDeveGerarLembreteDuplicadoQuandoHorarioSeRepete() {
+        cadastrarMedicamento(new MedicamentoAgendado(5L, "Losartana 50mg", DIA, null),
+                LocalTime.of(8, 0), LocalTime.of(8, 0));
+
+        List<Lembrete> gerados = gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        assertEquals(1, gerados.size());
+    }
+
     private void cadastrarConsulta(ConsultaAgendada consulta) {
         consultas.computeIfAbsent(PACIENTE_ID, id -> new ArrayList<>()).add(consulta);
     }
