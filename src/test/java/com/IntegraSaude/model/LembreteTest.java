@@ -16,21 +16,19 @@ class LembreteTest {
 
     private static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
     private static final Duration LIMITE = Duration.ofMinutes(30);
+    private static final LocalDateTime HORARIO_PREVISTO =
+            LocalDateTime.of(2026, 10, 24, 8, 0);
 
     @Test
     void deveNascerComStatusPendente() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
 
         assertEquals(StatusLembrete.PENDENTE, lembrete.getStatus());
     }
 
     @Test
     void deveConfirmarLembretePendente() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
 
         lembrete.confirmar();
 
@@ -39,9 +37,7 @@ class LembreteTest {
 
     @Test
     void deveMarcarComoPerdidoLembretePendente() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
 
         lembrete.marcarComoPerdido();
 
@@ -50,9 +46,7 @@ class LembreteTest {
 
     @Test
     void deveRejeitarConfirmacaoDeLembreteJaConfirmado() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
         lembrete.confirmar();
 
         assertThrows(TransicaoInvalidaException.class, lembrete::confirmar);
@@ -60,9 +54,7 @@ class LembreteTest {
 
     @Test
     void deveRejeitarConfirmacaoDeLembretePerdido() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
         lembrete.marcarComoPerdido();
 
         assertThrows(TransicaoInvalidaException.class, lembrete::confirmar);
@@ -70,9 +62,7 @@ class LembreteTest {
 
     @Test
     void deveRejeitarMarcarComoPerdidoLembreteConfirmado() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
+        Lembrete lembrete = criarLembrete();
         lembrete.confirmar();
 
         assertThrows(TransicaoInvalidaException.class, lembrete::marcarComoPerdido);
@@ -80,24 +70,22 @@ class LembreteTest {
 
     @Test
     void deveEstarVencidoAposOTempoLimite() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
-
-        Clock relogio = relogioEm(LocalDateTime.of(2026, 10, 24, 8, 31));
+        Lembrete lembrete = criarLembrete();
+        Clock relogio = relogioEm(HORARIO_PREVISTO.plusMinutes(31));
 
         assertTrue(lembrete.estaVencido(relogio, LIMITE));
     }
 
     @Test
     void naoDeveEstarVencidoAntesDoTempoLimite() {
-        Lembrete lembrete = new Lembrete(
-                1L, 10L, TipoLembrete.MEDICAMENTO, 5L,
-                LocalDateTime.of(2026, 10, 24, 8, 0));
-
-        Clock relogio = relogioEm(LocalDateTime.of(2026, 10, 24, 8, 29));
+        Lembrete lembrete = criarLembrete();
+        Clock relogio = relogioEm(HORARIO_PREVISTO.plusMinutes(29));
 
         assertFalse(lembrete.estaVencido(relogio, LIMITE));
+    }
+
+    private Lembrete criarLembrete() {
+        return new Lembrete(1L, 10L, TipoLembrete.MEDICAMENTO, 5L, HORARIO_PREVISTO);
     }
 
     private Clock relogioEm(LocalDateTime momento) {
