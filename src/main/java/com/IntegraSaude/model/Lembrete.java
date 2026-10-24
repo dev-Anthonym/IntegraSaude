@@ -1,5 +1,6 @@
 package com.IntegraSaude.model;
 
+import com.IntegraSaude.exception.TransicaoInvalidaException;
 import java.time.LocalDateTime;
 
 public class Lembrete {
@@ -22,11 +23,20 @@ public class Lembrete {
     }
 
     public void confirmar() {
+        exigirPendente();
         this.status = StatusLembrete.CONFIRMADO;
     }
 
     public void marcarComoPerdido() {
+        exigirPendente();
         this.status = StatusLembrete.PERDIDO;
+    }
+
+    private void exigirPendente() {
+        if (status != StatusLembrete.PENDENTE) {
+            throw new TransicaoInvalidaException(
+                    "Apenas lembrete pendente pode mudar de status. Status atual: " + status);
+        }
     }
 
     public Long getId() { return id; }
