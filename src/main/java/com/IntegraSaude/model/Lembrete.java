@@ -21,6 +21,10 @@ public class Lembrete {
         this.status = StatusLembrete.PENDENTE;
     }
 
+    public void confirmar() {
+        this.status = StatusLembrete.CONFIRMADO;
+    }
+
     public Long getId() { return id; }
     public Long getPacienteId() { return pacienteId; }
     public TipoLembrete getTipo() { return tipo; }
