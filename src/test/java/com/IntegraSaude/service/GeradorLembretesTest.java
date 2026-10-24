@@ -8,8 +8,10 @@ import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.MedicamentoAgendado;
 import com.IntegraSaude.model.StatusLembrete;
 import com.IntegraSaude.model.TipoLembrete;
+import com.IntegraSaude.repository.HistoricoRepositoryMemoria;
 import com.IntegraSaude.repository.LembreteRepository;
 import com.IntegraSaude.repository.LembreteRepositoryMemoria;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -40,6 +42,7 @@ class GeradorLembretesTest {
                 (medicamentoId, dia) -> horarios.getOrDefault(medicamentoId, List.of()),
                 pacienteId -> consultas.getOrDefault(pacienteId, List.of()),
                 repository,
+                new HistoricoService(new HistoricoRepositoryMemoria(), repository, Clock.systemDefaultZone()),
                 ANTECEDENCIA);
     }
 

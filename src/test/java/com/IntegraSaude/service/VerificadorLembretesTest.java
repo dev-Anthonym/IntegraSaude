@@ -8,6 +8,7 @@ import com.IntegraSaude.model.Perfil;
 import com.IntegraSaude.model.StatusLembrete;
 import com.IntegraSaude.model.TipoLembrete;
 import com.IntegraSaude.model.Usuario;
+import com.IntegraSaude.repository.HistoricoRepositoryMemoria;
 import com.IntegraSaude.repository.LembreteRepository;
 import com.IntegraSaude.repository.LembreteRepositoryMemoria;
 import com.IntegraSaude.repository.UsuarioRepository;
@@ -37,10 +38,12 @@ class VerificadorLembretesTest {
         usuarioRepository = new UsuarioRepositoryMemoria();
         paciente = salvarUsuario("Ana Maria", Perfil.PACIENTE);
         responsavel = salvarUsuario("Carlos", Perfil.RESPONSAVEL);
-        LembreteService lembreteService = new LembreteService(lembreteRepository,
+        HistoricoService historico = new HistoricoService(new HistoricoRepositoryMemoria(),
+                lembreteRepository, Clock.systemDefaultZone());
+        LembreteService lembreteService = new LembreteService(lembreteRepository, historico,
                 Clock.systemDefaultZone(), TEMPO_LIMITE);
         AlertaService alertaService = new AlertaService(pacienteId -> List.of(responsavel),
-                usuarioRepository, notificador, lembreteRepository);
+                usuarioRepository, notificador, lembreteRepository, historico);
         verificador = new VerificadorLembretes(lembreteService, alertaService, usuarioRepository, notificador);
     }
 

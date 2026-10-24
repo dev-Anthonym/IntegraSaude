@@ -8,10 +8,12 @@ import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.Perfil;
 import com.IntegraSaude.model.TipoLembrete;
 import com.IntegraSaude.model.Usuario;
+import com.IntegraSaude.repository.HistoricoRepositoryMemoria;
 import com.IntegraSaude.repository.LembreteRepository;
 import com.IntegraSaude.repository.LembreteRepositoryMemoria;
 import com.IntegraSaude.repository.UsuarioRepository;
 import com.IntegraSaude.repository.UsuarioRepositoryMemoria;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +36,10 @@ class AlertaServiceTest {
         usuarioRepository = new UsuarioRepositoryMemoria();
         lembreteRepository = new LembreteRepositoryMemoria();
         paciente = salvarUsuario("Ana Maria", Perfil.PACIENTE);
+        HistoricoService historico = new HistoricoService(new HistoricoRepositoryMemoria(),
+                lembreteRepository, Clock.systemDefaultZone());
         alertaService = new AlertaService(pacienteId -> responsaveis, usuarioRepository,
-                notificador, lembreteRepository);
+                notificador, lembreteRepository, historico);
     }
 
     @Test

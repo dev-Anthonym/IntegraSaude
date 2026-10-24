@@ -9,6 +9,7 @@ import com.IntegraSaude.exception.TransicaoInvalidaException;
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.StatusLembrete;
 import com.IntegraSaude.model.TipoLembrete;
+import com.IntegraSaude.repository.HistoricoRepositoryMemoria;
 import com.IntegraSaude.repository.LembreteRepository;
 import com.IntegraSaude.repository.LembreteRepositoryMemoria;
 import java.time.Clock;
@@ -114,7 +115,8 @@ class LembreteServiceTest {
 
     private LembreteService servicoEm(LocalDateTime agora) {
         Clock relogio = Clock.fixed(agora.atZone(FUSO).toInstant(), FUSO);
-        return new LembreteService(repository, relogio, TEMPO_LIMITE);
+        HistoricoService historico = new HistoricoService(new HistoricoRepositoryMemoria(), repository, relogio);
+        return new LembreteService(repository, historico, relogio, TEMPO_LIMITE);
     }
 
     private Lembrete salvarLembrete(Long pacienteId, LocalDateTime horario) {
