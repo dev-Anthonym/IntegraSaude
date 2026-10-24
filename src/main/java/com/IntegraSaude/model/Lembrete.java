@@ -1,5 +1,7 @@
 package com.IntegraSaude.model;
 
+import java.time.Clock;
+import java.time.Duration;
 import com.IntegraSaude.exception.TransicaoInvalidaException;
 import java.time.LocalDateTime;
 
@@ -37,6 +39,11 @@ public class Lembrete {
             throw new TransicaoInvalidaException(
                     "Apenas lembrete pendente pode mudar de status. Status atual: " + status);
         }
+    }
+
+    public boolean estaVencido(Clock relogio, Duration limite) {
+        LocalDateTime agora = LocalDateTime.now(relogio);
+        return agora.isAfter(horarioPrevisto.plus(limite));
     }
 
     public Long getId() { return id; }
