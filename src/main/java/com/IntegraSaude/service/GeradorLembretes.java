@@ -1,5 +1,6 @@
 package com.IntegraSaude.service;
 
+import com.IntegraSaude.model.ConsultaAgendada;
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.MedicamentoAgendado;
 import com.IntegraSaude.model.TipoLembrete;
@@ -35,6 +36,20 @@ public class GeradorLembretes {
         for (MedicamentoAgendado medicamento : fonteMedicamentos.listarDoPaciente(pacienteId)) {
             if (medicamento.estaAtivoEm(dia)) {
                 gerados.addAll(gerarDoMedicamento(pacienteId, medicamento, dia));
+            }
+        }
+        gerados.addAll(gerarDasConsultas(pacienteId, dia));
+        return gerados;
+    }
+
+    // RN10: o lembrete da consulta é gerado com antecedência em relação ao horário marcado
+    private List<Lembrete> gerarDasConsultas(Long pacienteId, LocalDate dia) {
+        List<Lembrete> gerados = new ArrayList<>();
+        for (ConsultaAgendada consulta : fonteConsultas.listarDoPaciente(pacienteId)) {
+            LocalDateTime horario = consulta.dataHora().minus(antecedenciaConsulta);
+            if (horario.toLocalDate().equals(dia)) {
+                gerados.add(criar(pacienteId, TipoLembrete.CONSULTA, consulta.id(),
+                        consulta.descricao(), horario));
             }
         }
         return gerados;
