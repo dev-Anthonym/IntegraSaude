@@ -14,9 +14,7 @@ import com.IntegraSaude.repository.UsuarioRepository;
 import com.IntegraSaude.repository.UsuarioRepositoryMemoria;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +55,7 @@ class AlertaServiceTest {
         Lembrete lembrete = lembretePerdido();
 
         assertDoesNotThrow(() -> alertaService.alertar(lembrete));
-        assertTrue(notificador.envios.isEmpty());
+        assertTrue(notificador.envios().isEmpty());
     }
 
     @Test
@@ -68,7 +66,7 @@ class AlertaServiceTest {
         alertaService.alertar(lembrete);
         alertaService.alertar(lembrete);
 
-        assertEquals(1, notificador.envios.size());
+        assertEquals(1, notificador.envios().size());
     }
 
     @Test
@@ -78,7 +76,7 @@ class AlertaServiceTest {
 
         alertaService.alertar(lembrete);
 
-        assertTrue(notificador.envios.isEmpty());
+        assertTrue(notificador.envios().isEmpty());
     }
 
     @Test
@@ -87,7 +85,7 @@ class AlertaServiceTest {
 
         alertaService.alertar(lembretePerdido());
 
-        String mensagem = notificador.envios.get(0).mensagem();
+        String mensagem = notificador.envios().get(0).mensagem();
         assertTrue(mensagem.contains("Ana Maria"), mensagem);
         assertTrue(mensagem.contains("Losartana 50mg"), mensagem);
         assertTrue(mensagem.contains("24/10/2026 08:00"), mensagem);
@@ -124,30 +122,5 @@ class AlertaServiceTest {
     private Lembrete salvarLembrete() {
         return lembreteRepository.salvar(new Lembrete(null, paciente.getId(),
                 TipoLembrete.MEDICAMENTO, 5L, "Losartana 50mg", HORARIO));
-    }
-
-    private record Envio(Usuario destinatario, String mensagem) {
-    }
-
-    private static class NotificadorFalso implements Notificador {
-
-        private final List<Envio> envios = new ArrayList<>();
-        private final Set<Long> destinatariosComFalha = new HashSet<>();
-
-        @Override
-        public void notificar(Usuario destinatario, String mensagem) {
-            if (destinatariosComFalha.contains(destinatario.getId())) {
-                throw new IllegalStateException("Falha simulada no envio");
-            }
-            envios.add(new Envio(destinatario, mensagem));
-        }
-
-        void falharPara(Usuario destinatario) {
-            destinatariosComFalha.add(destinatario.getId());
-        }
-
-        List<Usuario> destinatarios() {
-            return envios.stream().map(Envio::destinatario).toList();
-        }
     }
 }
