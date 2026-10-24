@@ -2,6 +2,7 @@ package com.IntegraSaude.service;
 
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.StatusLembrete;
+import com.IntegraSaude.model.TipoEvento;
 import com.IntegraSaude.model.TipoLembrete;
 import com.IntegraSaude.model.Usuario;
 import com.IntegraSaude.repository.LembreteRepository;
@@ -19,13 +20,16 @@ public class AlertaService {
     private final UsuarioRepository usuarioRepository;
     private final Notificador notificador;
     private final LembreteRepository lembreteRepository;
+    private final HistoricoService historicoService;
 
     public AlertaService(BuscaResponsaveis buscaResponsaveis, UsuarioRepository usuarioRepository,
-                         Notificador notificador, LembreteRepository lembreteRepository) {
+                         Notificador notificador, LembreteRepository lembreteRepository,
+                         HistoricoService historicoService) {
         this.buscaResponsaveis = buscaResponsaveis;
         this.usuarioRepository = usuarioRepository;
         this.notificador = notificador;
         this.lembreteRepository = lembreteRepository;
+        this.historicoService = historicoService;
     }
 
     public synchronized void alertar(Lembrete lembrete) {
@@ -40,6 +44,7 @@ public class AlertaService {
         responsaveis.forEach(responsavel -> enviar(responsavel, mensagem));
         lembrete.marcarAlertaEnviado();
         lembreteRepository.atualizar(lembrete);
+        historicoService.registrar(lembrete, TipoEvento.ALERTA_ENVIADO);
     }
 
     // Uma falha no envio para um responsável não impede o envio para os demais

@@ -3,6 +3,7 @@ package com.IntegraSaude.service;
 import com.IntegraSaude.model.ConsultaAgendada;
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.MedicamentoAgendado;
+import com.IntegraSaude.model.TipoEvento;
 import com.IntegraSaude.model.TipoLembrete;
 import com.IntegraSaude.repository.LembreteRepository;
 import java.time.Duration;
@@ -20,15 +21,17 @@ public class GeradorLembretes {
     private final HorariosMedicamento horariosMedicamento;
     private final FonteConsultas fonteConsultas;
     private final LembreteRepository lembreteRepository;
+    private final HistoricoService historicoService;
     private final Duration antecedenciaConsulta;
 
     public GeradorLembretes(FonteMedicamentos fonteMedicamentos, HorariosMedicamento horariosMedicamento,
                             FonteConsultas fonteConsultas, LembreteRepository lembreteRepository,
-                            Duration antecedenciaConsulta) {
+                            HistoricoService historicoService, Duration antecedenciaConsulta) {
         this.fonteMedicamentos = fonteMedicamentos;
         this.horariosMedicamento = horariosMedicamento;
         this.fonteConsultas = fonteConsultas;
         this.lembreteRepository = lembreteRepository;
+        this.historicoService = historicoService;
         this.antecedenciaConsulta = antecedenciaConsulta;
     }
 
@@ -74,6 +77,8 @@ public class GeradorLembretes {
             return Optional.empty();
         }
         Lembrete lembrete = new Lembrete(null, pacienteId, tipo, itemId, descricao, horario);
-        return Optional.of(lembreteRepository.salvar(lembrete));
+        lembreteRepository.salvar(lembrete);
+        historicoService.registrar(lembrete, TipoEvento.GERADO);
+        return Optional.of(lembrete);
     }
 }

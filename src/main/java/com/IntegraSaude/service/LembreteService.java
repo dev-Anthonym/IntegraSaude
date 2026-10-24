@@ -3,6 +3,7 @@ package com.IntegraSaude.service;
 import com.IntegraSaude.exception.RegistroNaoEncontradoException;
 import com.IntegraSaude.exception.TransicaoInvalidaException;
 import com.IntegraSaude.model.Lembrete;
+import com.IntegraSaude.model.TipoEvento;
 import com.IntegraSaude.repository.LembreteRepository;
 import java.time.Clock;
 import java.time.Duration;
@@ -14,11 +15,14 @@ import java.util.List;
 public class LembreteService {
 
     private final LembreteRepository lembreteRepository;
+    private final HistoricoService historicoService;
     private final Clock relogio;
     private final Duration tempoLimite;
 
-    public LembreteService(LembreteRepository lembreteRepository, Clock relogio, Duration tempoLimite) {
+    public LembreteService(LembreteRepository lembreteRepository, HistoricoService historicoService,
+                           Clock relogio, Duration tempoLimite) {
         this.lembreteRepository = lembreteRepository;
+        this.historicoService = historicoService;
         this.relogio = relogio;
         this.tempoLimite = tempoLimite;
     }
@@ -31,6 +35,7 @@ public class LembreteService {
         }
         lembrete.confirmar();
         lembreteRepository.atualizar(lembrete);
+        historicoService.registrar(lembrete, TipoEvento.CONFIRMADO);
         return lembrete;
     }
 
@@ -41,6 +46,7 @@ public class LembreteService {
             if (lembrete.estaVencidoEm(agora, tempoLimite)) {
                 lembrete.marcarComoPerdido();
                 lembreteRepository.atualizar(lembrete);
+                historicoService.registrar(lembrete, TipoEvento.PERDIDO);
                 perdidos.add(lembrete);
             }
         }
