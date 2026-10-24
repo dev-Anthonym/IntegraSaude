@@ -51,6 +51,13 @@ public class LembreteService {
         return lembreteRepository.listarPendentesDoPaciente(pacienteId);
     }
 
+    // Lembretes pendentes cujo horário previsto já chegou
+    public List<Lembrete> listarPendentesAte(LocalDateTime agora) {
+        return lembreteRepository.listarPendentes().stream()
+                .filter(lembrete -> !lembrete.getHorarioPrevisto().isAfter(agora))
+                .toList();
+    }
+
     public Lembrete buscarPorId(Long lembreteId) {
         return lembreteRepository.buscarPorId(lembreteId)
                 .orElseThrow(() -> new RegistroNaoEncontradoException(
