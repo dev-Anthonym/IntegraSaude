@@ -45,54 +45,48 @@ public class MenuLembretes {
     }
 
     public void verPendentes() {
-        try {
-            Long pacienteId = identificarPaciente();
-            List<Lembrete> pendentes = gerarEListarPendentes(pacienteId);
+        executar("listar lembretes", () -> {
+            List<Lembrete> pendentes = gerarEListarPendentes(identificarPaciente());
             saida.println("\n--- Lembretes pendentes ---");
             if (pendentes.isEmpty()) {
                 saida.println("Nenhum lembrete pendente.");
             }
             pendentes.forEach(lembrete -> saida.println(formatar(lembrete)));
-        } catch (AppException e) {
-            saida.println("\nErro: " + e.getMessage());
-        } catch (RuntimeException e) {
-            LOGGER.log(Level.WARNING, "Falha inesperada ao listar lembretes", e);
-            saida.println("\nErro inesperado. Tente novamente.");
-        }
+        });
     }
 
     public void confirmarLembrete() {
-        try {
-            Long pacienteId = identificarPaciente();
-            List<Lembrete> pendentes = gerarEListarPendentes(pacienteId);
+        executar("confirmar lembrete", () -> {
+            List<Lembrete> pendentes = gerarEListarPendentes(identificarPaciente());
             pendentes.forEach(lembrete -> saida.println(formatar(lembrete)));
             saida.print("Número do lembrete a confirmar: ");
-            Long lembreteId = lerNumero();
-            Lembrete lembrete = buscarEntrePendentes(pendentes, lembreteId);
+            Lembrete lembrete = buscarEntrePendentes(pendentes, lerNumero());
             lembreteService.confirmar(lembrete.getId());
-            saida.println("\nLembrete #" + lembreteId + " confirmado: " + respostaDeConfirmacao(lembrete)
+            saida.println("\nLembrete #" + lembrete.getId() + " confirmado: " + respostaDeConfirmacao(lembrete)
                     + " (" + lembrete.getDescricao() + ").");
-        } catch (AppException e) {
-            saida.println("\nErro: " + e.getMessage());
-        } catch (RuntimeException e) {
-            LOGGER.log(Level.WARNING, "Falha inesperada ao confirmar lembrete", e);
-            saida.println("\nErro inesperado. Tente novamente.");
-        }
+        });
     }
 
     public void verHistorico() {
-        try {
-            Long pacienteId = identificarPaciente();
-            List<EventoHistorico> eventos = historicoService.listarDoPaciente(pacienteId);
+        executar("exibir histórico", () -> {
+            List<EventoHistorico> eventos = historicoService.listarDoPaciente(identificarPaciente());
             saida.println("\n--- Histórico de lembretes ---");
             if (eventos.isEmpty()) {
                 saida.println("Nenhum evento registrado.");
             }
             eventos.forEach(evento -> saida.println(formatar(evento)));
+        });
+    }
+
+    // Ponto único de tratamento de erros: mensagem clara para o usuário e detalhes técnicos só no log
+    private void executar(String acao, Runnable comando) {
+        try {
+            comando.run();
         } catch (AppException e) {
             saida.println("\nErro: " + e.getMessage());
         } catch (RuntimeException e) {
-            LOGGER.log(Level.WARNING, "Falha inesperada ao exibir histórico", e);
+            LOGGER.warning("Falha inesperada ao " + acao + ": " + e.getMessage());
+            LOGGER.log(Level.FINE, "Detalhes da falha ao " + acao, e);
             saida.println("\nErro inesperado. Tente novamente.");
         }
     }
