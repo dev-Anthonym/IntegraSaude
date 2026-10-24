@@ -3,6 +3,7 @@ package com.IntegraSaude.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.IntegraSaude.model.ConsultaAgendada;
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.MedicamentoAgendado;
 import com.IntegraSaude.model.StatusLembrete;
@@ -12,6 +13,7 @@ import com.IntegraSaude.repository.LembreteRepositoryMemoria;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ class GeradorLembretesTest {
 
     private final Map<Long, List<MedicamentoAgendado>> medicamentos = new HashMap<>();
     private final Map<Long, List<LocalTime>> horarios = new HashMap<>();
+    private final Map<Long, List<ConsultaAgendada>> consultas = new HashMap<>();
     private LembreteRepository repository;
     private GeradorLembretes gerador;
 
@@ -35,7 +38,7 @@ class GeradorLembretesTest {
         gerador = new GeradorLembretes(
                 pacienteId -> medicamentos.getOrDefault(pacienteId, List.of()),
                 (medicamentoId, dia) -> horarios.getOrDefault(medicamentoId, List.of()),
-                pacienteId -> List.of(),
+                pacienteId -> consultas.getOrDefault(pacienteId, List.of()),
                 repository,
                 ANTECEDENCIA);
     }
@@ -77,8 +80,45 @@ class GeradorLembretesTest {
         assertTrue(repository.listarPorPaciente(PACIENTE_ID).isEmpty());
     }
 
+    @Test
+    void deveGerarLembreteDeConsultaComAntecedencia() {
+        cadastrarConsulta(new ConsultaAgendada(7L, "Consulta com cardiologista", DIA.atTime(14, 0)));
+
+        List<Lembrete> gerados = gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        assertEquals(1, gerados.size());
+        Lembrete lembrete = gerados.get(0);
+        assertEquals(TipoLembrete.CONSULTA, lembrete.getTipo());
+        assertEquals(7L, lembrete.getItemId());
+        assertEquals("Consulta com cardiologista", lembrete.getDescricao());
+        assertEquals(DIA.atTime(13, 0), lembrete.getHorarioPrevisto());
+    }
+
+    @Test
+    void naoDeveGerarLembreteDeConsultaDeOutroDia() {
+        cadastrarConsulta(new ConsultaAgendada(7L, "Retorno", DIA.plusDays(3).atTime(14, 0)));
+
+        List<Lembrete> gerados = gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        assertTrue(gerados.isEmpty());
+    }
+
+    @Test
+    void deveGerarNoDiaAnteriorLembreteDeConsultaLogoAposMeiaNoite() {
+        cadastrarConsulta(new ConsultaAgendada(7L, "Exame em jejum", DIA.plusDays(1).atTime(0, 30)));
+
+        List<Lembrete> gerados = gerador.gerarDoDia(PACIENTE_ID, DIA);
+
+        assertEquals(1, gerados.size());
+        assertEquals(DIA.atTime(23, 30), gerados.get(0).getHorarioPrevisto());
+    }
+
+    private void cadastrarConsulta(ConsultaAgendada consulta) {
+        consultas.computeIfAbsent(PACIENTE_ID, id -> new ArrayList<>()).add(consulta);
+    }
+
     private void cadastrarMedicamento(MedicamentoAgendado medicamento, LocalTime... horariosDoDia) {
-        medicamentos.computeIfAbsent(PACIENTE_ID, id -> new java.util.ArrayList<>()).add(medicamento);
+        medicamentos.computeIfAbsent(PACIENTE_ID, id -> new ArrayList<>()).add(medicamento);
         horarios.put(medicamento.id(), List.of(horariosDoDia));
     }
 }
