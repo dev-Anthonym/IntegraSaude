@@ -2,14 +2,18 @@ package com.IntegraSaude.service;
 
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.TipoLembrete;
+import com.IntegraSaude.model.Usuario;
 import com.IntegraSaude.repository.UsuarioRepository;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 // Lógica executada a cada ciclo do agendador, sem depender de threads (testável com qualquer horário)
 public class VerificadorLembretes {
+
+    private static final Logger LOGGER = Logger.getLogger(VerificadorLembretes.class.getName());
 
     private final LembreteService lembreteService;
     private final AlertaService alertaService;
@@ -36,7 +40,16 @@ public class VerificadorLembretes {
             return;
         }
         usuarioRepository.buscarPorId(lembrete.getPacienteId())
-                .ifPresent(paciente -> notificador.notificar(paciente, montarAviso(lembrete)));
+                .ifPresent(paciente -> enviarAviso(paciente, lembrete));
+    }
+
+    // Uma falha ao avisar um paciente não impede os avisos dos demais
+    private void enviarAviso(Usuario paciente, Lembrete lembrete) {
+        try {
+            notificador.notificar(paciente, montarAviso(lembrete));
+        } catch (RuntimeException e) {
+            LOGGER.warning("Falha ao avisar o paciente " + paciente.getId() + ": " + e.getMessage());
+        }
     }
 
     private String montarAviso(Lembrete lembrete) {
