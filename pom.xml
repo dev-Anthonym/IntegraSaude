@@ -33,6 +33,14 @@
             <version>5.10.2</version>
             <scope>test</scope> <!-- Indica que essa biblioteca só será usada na hora de rodar os testes, não vai para produção -->
         </dependency>
+
+        <!-- Banco H2 em memória: usado para testar os repositórios JDBC sem precisar de um banco instalado -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <!-- Bloco de configurações de construção (build) e plugins -->
