@@ -30,7 +30,7 @@ Regras:
 
 
 
-1\. Nunca faça commit direto em `main` ou `develop`; abra um Pull Request.
+1\. Nunca faça commit direto em `main` ou `develop`; abra um Pull Request para aprovação.
 
 2\. Antes do PR, rode `mvn test`.
 
