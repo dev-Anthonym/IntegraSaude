@@ -11,8 +11,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repositório JDBC responsável pelas operações de persistência (CRUD) da tabela 'consulta'.
+ * Gerencia automaticamente o relacionamento na 3FN com as tabelas 'medico' e 'especialidade'.
+ */
 public class ConsultaRepository {
 
+    /**
+     * Insere uma consulta diretamente informando os IDs de paciente e médico.
+     */
     public void inserir(int pacienteId, int medicoId, String local, String dataHora, String status) {
         String sql = "INSERT INTO consulta (paciente_id, medico_id, local, data_hora, status) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = ConexaoBanco.abrir();
@@ -28,6 +35,10 @@ public class ConsultaRepository {
         }
     }
 
+    /**
+     * Sobrecarga que recebe o objeto Consulta e garante o cadastro normalizado
+     * da especialidade e do médico antes de gravar o agendamento.
+     */
     public void inserir(Consulta consulta) {
         int pacienteId = garantirPacientePadrao();
         int especialidadeId = garantirEspecialidade(consulta.getEspecialidade());
@@ -35,6 +46,9 @@ public class ConsultaRepository {
         inserir(pacienteId, medicoId, "Consultorio Principal", consulta.getDataHora(), "AGENDADA");
     }
 
+    /**
+     * Lista todas as consultas realizando JOIN com 'medico' e 'especialidade'.
+     */
     public List<Consulta> listarTodos() {
         List<Consulta> lista = new ArrayList<>();
         String sql = "SELECT c.id, m.nome AS medico, e.nome AS especialidade, c.data_hora " +
@@ -58,6 +72,9 @@ public class ConsultaRepository {
         return lista;
     }
 
+    /**
+     * Atualiza o status de uma consulta (AGENDADA, REALIZADA ou CANCELADA).
+     */
     public void atualizarStatus(long id, String novoStatus) {
         String sql = "UPDATE consulta SET status = ? WHERE id = ?";
         try (Connection conn = ConexaoBanco.abrir();
@@ -70,6 +87,9 @@ public class ConsultaRepository {
         }
     }
 
+    /**
+     * Remove uma consulta do banco de dados pelo seu ID.
+     */
     public void deletarPorId(long id) {
         String sql = "DELETE FROM consulta WHERE id = ?";
         try (Connection conn = ConexaoBanco.abrir();
@@ -81,6 +101,9 @@ public class ConsultaRepository {
         }
     }
 
+    /**
+     * Busca ou cria o paciente padrão para vincular à consulta.
+     */
     private int garantirPacientePadrao() {
         String sqlBusca = "SELECT id FROM usuario WHERE email = 'paciente.padrao@integrasaude.com'";
         String sqlInsere = "INSERT INTO usuario (nome, email, senha_hash, perfil, data_cadastro) VALUES ('Paciente Padrao', 'paciente.padrao@integrasaude.com', 'HASH', 'PACIENTE', '2026-01-01T00:00:00')";
@@ -101,6 +124,9 @@ public class ConsultaRepository {
         }
     }
 
+    /**
+     * Busca o ID de uma especialidade pelo nome ou a insere caso ainda não exista (3FN).
+     */
     private int garantirEspecialidade(String nomeEspecialidade) {
         String sqlBusca = "SELECT id FROM especialidade WHERE nome = ?";
         String sqlInsere = "INSERT INTO especialidade (nome) VALUES (?)";
@@ -126,6 +152,9 @@ public class ConsultaRepository {
         }
     }
 
+    /**
+     * Busca o ID de um médico pelo nome e especialidade ou o insere caso não exista (3FN).
+     */
     private int garantirMedico(String nomeMedico, int especialidadeId) {
         String sqlBusca = "SELECT id FROM medico WHERE nome = ? AND especialidade_id = ?";
         String sqlInsere = "INSERT INTO medico (nome, especialidade_id) VALUES (?, ?)";
