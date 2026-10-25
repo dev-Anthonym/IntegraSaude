@@ -8,8 +8,13 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.stream.Collectors;
 
+/**
+ * Classe responsável por inicializar o esquema do banco de dados SQLite,
+ * lendo e executando automaticamente os scripts DDL contidos no classpath (/db/).
+ */
 public class InicializadorBanco {
 
+    // Lista ordenada dos scripts DDL que criam as 8 tabelas do sistema na 3FN
     private static final String[] SCRIPTS = {
         "/db/01_usuarios.sql",
         "/db/02_medicamentos.sql",
@@ -17,19 +22,27 @@ public class InicializadorBanco {
         "/db/04_lembretes.sql"
     };
 
+    /**
+     * Executa todos os scripts DDL em sequência utilizando a conexão informada.
+     *
+     * @param conexao Conexão JDBC aberta com o SQLite.
+     */
     public static void executar(Connection conexao) {
         for (String caminhoScript : SCRIPTS) {
             executarScript(conexao, caminhoScript);
         }
-        System.out.println("-> Inicializador do banco executado com sucesso!");
     }
 
+    /**
+     * Lê um arquivo .sql do classpath, remove comentários de linha e executa cada comando SQL.
+     */
     private static void executarScript(Connection conexao, String caminhoResource) {
         try (InputStream is = InicializadorBanco.class.getResourceAsStream(caminhoResource)) {
             if (is == null) {
-                throw new RuntimeException("Script não encontrado no classpath: " + caminhoResource);
+                throw new RuntimeException("Script nao encontrado no classpath: " + caminhoResource);
             }
 
+            // Lê todo o conteúdo do arquivo ignorando linhas de comentário SQL (--)
             String conteudoSql;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
                 conteudoSql = reader.lines()
@@ -37,6 +50,7 @@ public class InicializadorBanco {
                     .collect(Collectors.joining("\n"));
             }
 
+            // Divide o script pelo ponto e vírgula (;) e executa cada instrução individualmente
             String[] comandos = conteudoSql.split(";");
             try (Statement stmt = conexao.createStatement()) {
                 for (String comando : comandos) {
