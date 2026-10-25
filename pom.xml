@@ -9,7 +9,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <!-- Atualizado para a sua versão do Java 25 -->
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -43,11 +42,6 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>org.apache.npm.plugins</groupId> <!-- ou apache plugins padrão -->
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
@@ -57,7 +51,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
-                    <mainClass>com.IntegraSaude.ui.Main</mainClass>
+                    <mainClass>com.IntegraSaude.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>
