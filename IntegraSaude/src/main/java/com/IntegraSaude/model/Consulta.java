@@ -1,36 +1,39 @@
 package com.IntegraSaude.model;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 /**
- * A classe Consulta representa os agendamentos de consultas médicas do paciente.
- * Ela armazena informações como médico, especialidade, data e horário.
+ * Representa uma consulta médica agendada para um paciente.
  */
 public class Consulta {
-
-    // --- ATRIBUTOS (CAMPOS) ---
-    private Long id;                  // Identificador único da consulta
-    private String medico;            // Nome do médico responsável
-    private String especialidade;     // Especialidade médica (ex: Cardiologia, Pediatria)
-    private String dataHora;          // Data e horário agendados (ex: 2026-11-10 14:30)
-
-    /**
-     * Construtor Vazio (Default).
-     * Necessário para criar o objeto sem preencher dados imediatamente.
-     */
-    public Consulta() {}
+    
+    private Long id;
+    private Long pacienteId;
+    private String especialidade;
+    private String medico;
+    private String local;
+    private LocalDateTime dataHora;
 
     /**
-     * Construtor Completo com Parâmetros.
-     * Facilita a criação da consulta já com todos os dados preenchidos.
+     * Construtor vazio padrão.
      */
-    public Consulta(Long id, String medico, String especialidade, String dataHora) {
+    public Consulta() {
+    }
+
+    /**
+     * Construtor com todos os atributos da entidade de consulta.
+     */
+    public Consulta(Long id, Long pacienteId, String especialidade, String medico, String local, LocalDateTime dataHora) {
         this.id = id;
-        this.medico = medico;
+        this.pacienteId = pacienteId;
         this.especialidade = especialidade;
+        this.medico = medico;
+        this.local = local;
         this.dataHora = dataHora;
     }
 
-    // --- GETTERS E SETTERS ---
-    // Métodos para ler (get) e alterar (set) os campos privados da classe.
+    // --- Getters e Setters ---
 
     public Long getId() {
         return id;
@@ -40,12 +43,12 @@ public class Consulta {
         this.id = id;
     }
 
-    public String getMedico() {
-        return medico;
+    public Long getPacienteId() {
+        return pacienteId;
     }
 
-    public void setMedico(String medico) {
-        this.medico = medico;
+    public void setPacienteId(Long pacienteId) {
+        this.pacienteId = pacienteId;
     }
 
     public String getEspecialidade() {
@@ -56,20 +59,42 @@ public class Consulta {
         this.especialidade = especialidade;
     }
 
-    public String getDataHora() {
+    public String getMedico() {
+        return medico;
+    }
+
+    public void setMedico(String medico) {
+        this.medico = medico;
+    }
+
+    public String getLocal() {
+        return local;
+    }
+
+    public void setLocal(String local) {
+        this.local = local;
+    }
+
+    public LocalDateTime getDataHora() {
         return dataHora;
     }
 
-    public void setDataHora(String dataHora) {
+    public void setDataHora(LocalDateTime dataHora) {
         this.dataHora = dataHora;
     }
 
-    /**
-     * Método toString().
-     * Formata os dados da consulta em texto para exibições ou logs.
-     */
+    // --- Métodos de Comparação (Equals e HashCode baseados no ID) ---
+
     @Override
-    public String toString() {
-        return "Consulta [ID=" + id + ", Médico=" + medico + ", Especialidade=" + especialidade + ", Data/Hora=" + dataHora + "]";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Consulta consulta = (Consulta) o;
+        return Objects.equals(id, consulta.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
