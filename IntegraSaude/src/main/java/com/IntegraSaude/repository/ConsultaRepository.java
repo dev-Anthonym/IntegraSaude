@@ -2,6 +2,7 @@ package com.IntegraSaude.repository;
 
 import com.IntegraSaude.model.Consulta;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class ConsultaRepository {
 
             pstmt.setString(1, consulta.getMedico());
             pstmt.setString(2, consulta.getEspecialidade());
-            pstmt.setString(3, consulta.getDataHora());
+            pstmt.setString(3, consulta.getDataHora() != null ? consulta.getDataHora().toString() : null);
             
             pstmt.executeUpdate();
             System.out.println("-> Consulta cadastrada com sucesso no banco de dados!");
@@ -50,8 +51,11 @@ public class ConsultaRepository {
                 cons.setId(rs.getLong("id"));
                 cons.setMedico(rs.getString("medico"));
                 cons.setEspecialidade(rs.getString("especialidade"));
-                cons.setDataHora(rs.getString("data_hora"));
-                
+                String dataHoraStr = rs.getString("data_hora");
+                    if (dataHoraStr != null) {
+                        cons.setDataHora(LocalDateTime.parse(dataHoraStr));
+                    }
+
                 consultas.add(cons);
             }
 

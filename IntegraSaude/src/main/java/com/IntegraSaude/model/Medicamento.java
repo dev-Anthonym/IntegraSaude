@@ -1,39 +1,46 @@
 package com.IntegraSaude.model;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Objects;
+
 /**
- * A classe Medicamento representa a entidade principal de domínio do sistema.
- * Ela atua como um "Model" (Modelo), guardando os dados de um medicamento cadastrado
- * para o paciente.
+ * Representa um medicamento prescrito a um paciente, contendo dados de dosagem e frequência.
  */
 public class Medicamento {
-
-    // --- ATRIBUTOS (CAMPOS) ---
-    // Representam as colunas que teremos na nossa tabela do banco de dados SQLite.
-    private Long id;       // Identificador único do medicamento
-    private String nome;   // Nome comercial ou genérico do remédio
-    private String dosagem;// Quantidade ou concentração (ex: 500mg)
-    private String horario;// Horário programado para a tomada (ex: 08:00)
-
-    /**
-     * Construtor Vazio (Default).
-     * Necessário para instanciar objetos sem passar valores iniciais,
-     * útil para frameworks ou quando preenchemos os dados via setters depois.
-     */
-    public Medicamento() {}
+    
+    private Long id;
+    private Long pacienteId;
+    private String nome;
+    private String dosagem;
+    private Integer frequenciaHoras;
+    private LocalTime primeiroHorario;
+    private LocalDate dataInicio;
+    private LocalDate dataFim;
 
     /**
-     * Construtor Completo com Parâmetros.
-     * Permite criar um objeto Medicamento já com todos os dados preenchidos de uma vez.
+     * Construtor vazio padrão.
      */
-    public Medicamento(Long id, String nome, String dosagem, String horario) {
-        this.id = id;
-        this.nome = nome;
-        this.dosagem = dosagem;
-        this.horario = horario;
+    public Medicamento() {
     }
 
-    // --- GETTERS E SETTERS ---
-    // Métodos de acesso para proteger e manipular os atributos privados da classe (Encapsulamento).
+    /**
+     * Construtor com todos os atributos da entidade de medicamento.
+     */
+    public Medicamento(Long id, Long pacienteId, String nome, String dosagem, 
+                       Integer frequenciaHoras, LocalTime primeiroHorario, 
+                       LocalDate dataInicio, LocalDate dataFim) {
+        this.id = id;
+        this.pacienteId = pacienteId;
+        this.nome = nome;
+        this.dosagem = dosagem;
+        this.frequenciaHoras = frequenciaHoras;
+        this.primeiroHorario = primeiroHorario;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+    }
+
+    // --- Getters e Setters ---
 
     public Long getId() {
         return id;
@@ -41,6 +48,14 @@ public class Medicamento {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getPacienteId() {
+        return pacienteId;
+    }
+
+    public void setPacienteId(Long pacienteId) {
+        this.pacienteId = pacienteId;
     }
 
     public String getNome() {
@@ -59,21 +74,50 @@ public class Medicamento {
         this.dosagem = dosagem;
     }
 
-    public String getHorario() {
-        return horario;
+    public Integer getFrequenciaHoras() {
+        return frequenciaHoras;
     }
 
-    public void setHorario(String horario) {
-        this.horario = horario;
+    public void setFrequenciaHoras(Integer frequenciaHoras) {
+        this.frequenciaHoras = frequenciaHoras;
     }
 
-    /**
-     * Método toString().
-     * Sobrescreve o comportamento padrão do Java para retornar uma representação
-     * em formato de texto legível (útil para exibir os dados no console ou logs).
-     */
+    public LocalTime getPrimeiroHorario() {
+        return primeiroHorario;
+    }
+
+    public void setPrimeiroHorario(LocalTime primeiroHorario) {
+        this.primeiroHorario = primeiroHorario;
+    }
+
+    public LocalDate getDataInicio() {
+        return dataInicio;
+    }
+
+    public void setDataInicio(LocalDate dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public LocalDate getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDate dataFim) {
+        this.dataFim = dataFim;
+    }
+
+    // --- Métodos de Comparação (Equals e HashCode baseados no ID) ---
+
     @Override
-    public String toString() {
-        return "Medicamento [ID=" + id + ", Nome=" + nome + ", Dosagem=" + dosagem + ", Horário=" + horario + "]";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Medicamento that = (Medicamento) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
