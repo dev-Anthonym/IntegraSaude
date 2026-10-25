@@ -4,6 +4,8 @@ import com.IntegraSaude.model.Consulta;
 import com.IntegraSaude.repository.jdbc.ConexaoBanco;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsultaRepository {
 
@@ -27,5 +29,29 @@ public class ConsultaRepository {
 
     public void inserir(Consulta consulta) {
         inserir(consulta.getPacienteId(), consulta.getMedicoId(), consulta.getLocal(), consulta.getDataHora(), consulta.getStatus());
+    }
+
+    public List<Consulta> listarTodos() {
+        List<Consulta> lista = new ArrayList<>();
+        String sql = "SELECT * FROM consulta";
+        
+        try (Connection conn = ConexaoBanco.abrir();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Consulta c = new Consulta();
+                c.setId(rs.getInt("id"));
+                c.setPacienteId(rs.getInt("paciente_id"));
+                c.setMedicoId(rs.getInt("medico_id"));
+                c.setLocal(rs.getString("local"));
+                c.setDataHora(rs.getString("data_hora"));
+                c.setStatus(rs.getString("status"));
+                lista.add(c);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar consultas", e);
+        }
+        return lista;
     }
 }

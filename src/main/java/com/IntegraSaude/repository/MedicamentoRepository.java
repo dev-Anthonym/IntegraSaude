@@ -4,6 +4,8 @@ import com.IntegraSaude.model.Medicamento;
 import com.IntegraSaude.repository.jdbc.ConexaoBanco;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MedicamentoRepository {
 
@@ -29,5 +31,31 @@ public class MedicamentoRepository {
 
     public void inserir(Medicamento med) {
         inserir(med.getPacienteId(), med.getNome(), med.getDosagem(), med.getFrequenciaHoras(), med.getPrimeiroHorario(), med.getDataInicio(), med.getDataFim());
+    }
+
+    public List<Medicamento> listarTodos() {
+        List<Medicamento> lista = new ArrayList<>();
+        String sql = "SELECT * FROM medicamento";
+        
+        try (Connection conn = ConexaoBanco.abrir();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Medicamento med = new Medicamento();
+                med.setId(rs.getInt("id"));
+                med.setPacienteId(rs.getInt("paciente_id"));
+                med.setNome(rs.getString("nome"));
+                med.setDosagem(rs.getString("dosagem"));
+                med.setFrequenciaHoras(rs.getInt("frequencia_horas"));
+                med.setPrimeiroHorario(rs.getString("primeiro_horario"));
+                med.setDataInicio(rs.getString("data_inicio"));
+                med.setDataFim(rs.getString("data_fim"));
+                lista.add(med);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar medicamentos", e);
+        }
+        return lista;
     }
 }
