@@ -1,10 +1,10 @@
-# IntegraSaúde
+# IntegraSaúde#
 
 > Lembretes de medicamentos e consultas com alerta automático ao responsável — projeto da disciplina de **Garantia da Qualidade de Software (Trabalho A3)**, alinhado ao **ODS 3 – Saúde e Bem-Estar**.
 
 Esquecer uma dose ou uma consulta é comum e, para quem faz tratamento contínuo, pode ser grave. O IntegraSaúde ajuda o **paciente** a seguir o tratamento e dá tranquilidade ao **responsável** (familiar ou cuidador): se uma dose não for confirmada a tempo, o responsável é avisado automaticamente.
 
----
+-------------
 
 ## Sumário
 
@@ -19,7 +19,7 @@ Esquecer uma dose ou uma consulta é comum e, para quem faz tratamento contínuo
 9. [Como contribuir](#como-contribuir)
 10. [Equipe e licença](#equipe-e-licença)
 
----
+------------
 
 ## Funcionalidades
 
