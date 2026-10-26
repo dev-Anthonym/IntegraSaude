@@ -1,75 +1,63 @@
 package com.IntegraSaude.model;
 
+import com.IntegraSaude.exception.OperacaoInvalidaException;
+import java.time.LocalDateTime;
+
 /**
- * A classe Consulta representa os agendamentos de consultas médicas do paciente.
- * Ela armazena informações como médico, especialidade, data e horário.
+ * Consulta médica de um paciente (RN06 e RN08). A especialidade vem do médico.
+ * Consulta cancelada não é apagada: muda para o status CANCELADA (como no banco).
  */
-public class Consulta {
+public class Consulta extends EntidadeBase {
 
-    // --- ATRIBUTOS (CAMPOS) ---
-    private Long id;                  // Identificador único da consulta
-    private String medico;            // Nome do médico responsável
-    private String especialidade;     // Especialidade médica (ex: Cardiologia, Pediatria)
-    private String dataHora;          // Data e horário agendados (ex: 2026-11-10 14:30)
+    private final Long pacienteId;
+    private final Medico medico;
+    private final String local;
+    private final LocalDateTime dataHora;
+    private StatusConsulta status;
 
-    /**
-     * Construtor Vazio (Default).
-     * Necessário para criar o objeto sem preencher dados imediatamente.
-     */
-    public Consulta() {}
+    // Consulta nova: nasce AGENDADA
+    public Consulta(Long pacienteId, Medico medico, String local, LocalDateTime dataHora) {
+        this(pacienteId, medico, local, dataHora, StatusConsulta.AGENDADA);
+    }
 
-    /**
-     * Construtor Completo com Parâmetros.
-     * Facilita a criação da consulta já com todos os dados preenchidos.
-     */
-    public Consulta(Long id, String medico, String especialidade, String dataHora) {
-        this.id = id;
+    // Reconstrói uma consulta já salva (usado pelos repositórios JDBC)
+    public Consulta(Long pacienteId, Medico medico, String local, LocalDateTime dataHora, StatusConsulta status) {
+        this.pacienteId = pacienteId;
         this.medico = medico;
-        this.especialidade = especialidade;
+        this.local = local;
         this.dataHora = dataHora;
+        this.status = status;
     }
 
-    // --- GETTERS E SETTERS ---
-    // Métodos para ler (get) e alterar (set) os campos privados da classe.
-
-    public Long getId() {
-        return id;
+    // Transição AGENDADA -> CANCELADA
+    public void cancelar() {
+        if (status != StatusConsulta.AGENDADA) {
+            throw new OperacaoInvalidaException("Apenas consultas agendadas podem ser canceladas");
+        }
+        this.status = StatusConsulta.CANCELADA;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public boolean estaAgendada() {
+        return status == StatusConsulta.AGENDADA;
     }
 
-    public String getMedico() {
+    public Long getPacienteId() {
+        return pacienteId;
+    }
+
+    public Medico getMedico() {
         return medico;
     }
 
-    public void setMedico(String medico) {
-        this.medico = medico;
+    public String getLocal() {
+        return local;
     }
 
-    public String getEspecialidade() {
-        return especialidade;
-    }
-
-    public void setEspecialidade(String especialidade) {
-        this.especialidade = especialidade;
-    }
-
-    public String getDataHora() {
+    public LocalDateTime getDataHora() {
         return dataHora;
     }
 
-    public void setDataHora(String dataHora) {
-        this.dataHora = dataHora;
-    }
-
-    /**
-     * Método toString().
-     * Formata os dados da consulta em texto para exibições ou logs.
-     */
-    @Override
-    public String toString() {
-        return "Consulta [ID=" + id + ", Médico=" + medico + ", Especialidade=" + especialidade + ", Data/Hora=" + dataHora + "]";
+    public StatusConsulta getStatus() {
+        return status;
     }
 }

@@ -1,67 +1,83 @@
 package com.IntegraSaude.repository.jdbc;
 
-import java.io.BufferedReader;
+import com.IntegraSaude.exception.PersistenciaException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Classe responsável por inicializar o esquema do banco de dados SQLite,
- * lendo e executando automaticamente os scripts DDL contidos no classpath (/db/).
+ * Cria e atualiza as tabelas lendo os scripts SQL do projeto (pasta database/,
+ * copiada para db/ no classpath pelo Maven). Pode rodar a cada abertura do banco.
  */
-public class InicializadorBanco {
+public final class InicializadorBanco {
 
-    // Lista ordenada dos scripts DDL que criam as 8 tabelas do sistema na 3FN
-    private static final String[] SCRIPTS = {
-        "/db/01_usuarios.sql",
-        "/db/02_medicamentos.sql",
-        "/db/03_consultas.sql",
-        "/db/04_lembretes.sql"
-    };
+    // Ordem importa: as tabelas dependem umas das outras por chave estrangeira.
+    // O 05 altera tabelas já criadas (ex.: telefone do usuário).
+    private static final List<String> SCRIPTS = List.of(
+            "01_usuarios.sql", "02_medicamentos.sql", "03_consultas.sql",
+            "04_lembretes.sql", "05_alteracoes.sql");
+    private static final String PASTA = "/db/";
+    private static final String PREFIXO_COMENTARIO = "--";
+    // ALTER TABLE ADD COLUMN não tem IF NOT EXISTS: na segunda execução o SQLite avisa que a coluna já existe
+    private static final String COLUNA_JA_EXISTE = "duplicate column name";
 
-    /**
-     * Executa todos os scripts DDL em sequência utilizando a conexão informada.
-     *
-     * @param conexao Conexão JDBC aberta com o SQLite.
-     */
+    private InicializadorBanco() {
+    }
+
+    // Executa todos os scripts de estrutura em ordem
     public static void executar(Connection conexao) {
-        for (String caminhoScript : SCRIPTS) {
-            executarScript(conexao, caminhoScript);
+        for (String script : SCRIPTS) {
+            executarScript(conexao, script);
         }
     }
 
-    /**
-     * Lê um arquivo .sql do classpath, remove comentários de linha e executa cada comando SQL.
-     */
-    private static void executarScript(Connection conexao, String caminhoResource) {
-        try (InputStream is = InicializadorBanco.class.getResourceAsStream(caminhoResource)) {
-            if (is == null) {
-                throw new RuntimeException("Script nao encontrado no classpath: " + caminhoResource);
-            }
+    // Executa um script do classpath (também usado para carregar os dados de demonstração nos testes)
+    public static void executarScript(Connection conexao, String nomeScript) {
+        for (String comando : separarComandos(lerScript(nomeScript))) {
+            executarComando(conexao, comando);
+        }
+    }
 
-            // Lê todo o conteúdo do arquivo ignorando linhas de comentário SQL (--)
-            String conteudoSql;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                conteudoSql = reader.lines()
-                    .filter(linha -> !linha.trim().startsWith("--"))
-                    .collect(Collectors.joining("\n"));
+    // Lê o script do classpath como texto UTF-8
+    private static String lerScript(String nome) {
+        try (InputStream entrada = InicializadorBanco.class.getResourceAsStream(PASTA + nome)) {
+            if (entrada == null) {
+                throw new PersistenciaException("Script SQL nao encontrado: " + nome);
             }
+            return new String(entrada.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new PersistenciaException("Nao foi possivel ler o script " + nome, e);
+        }
+    }
 
-            // Divide o script pelo ponto e vírgula (;) e executa cada instrução individualmente
-            String[] comandos = conteudoSql.split(";");
-            try (Statement stmt = conexao.createStatement()) {
-                for (String comando : comandos) {
-                    if (!comando.trim().isEmpty()) {
-                        stmt.execute(comando);
-                    }
-                }
+    // Remove comentários de linha e separa os comandos pelo ponto e vírgula
+    private static List<String> separarComandos(String conteudo) {
+        StringBuilder semComentarios = new StringBuilder();
+        for (String linha : conteudo.split("\n")) {
+            if (!linha.trim().startsWith(PREFIXO_COMENTARIO)) {
+                semComentarios.append(linha).append('\n');
             }
+        }
+        return Arrays.stream(semComentarios.toString().split(";"))
+                .map(String::trim)
+                .filter(comando -> !comando.isEmpty())
+                .toList();
+    }
 
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao executar o script SQL: " + caminhoResource, e);
+    // Executa um comando; ignora só o aviso de "coluna já existe" (script de alteração rodando de novo)
+    private static void executarComando(Connection conexao, String comando) {
+        try (Statement declaracao = conexao.createStatement()) {
+            declaracao.execute(comando);
+        } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains(COLUNA_JA_EXISTE)) {
+                return;
+            }
+            throw new PersistenciaException("Falha ao executar o script SQL: " + comando, e);
         }
     }
 }

@@ -1,39 +1,23 @@
 package com.IntegraSaude;
 
-import com.IntegraSaude.exception.ValidacaoException;
-import com.IntegraSaude.service.ConsultaService;
-import com.IntegraSaude.service.MedicamentoService;
+import com.IntegraSaude.config.ConfiguracaoApp;
+import com.IntegraSaude.exception.AppException;
 
-/**
- * A classe Main é o ponto de entrada da aplicação IntegraSaude.
- * Focada temporariamente na validação das regras de negócio.
- */
-public class Main {
+/** Ponto de entrada. Só lê a configuração e delega para a Aplicacao. */
+public final class Main {
+
+    private static final int CODIGO_ERRO = 1;
+
+    private Main() {
+    }
+
     public static void main(String[] args) {
-        System.out.println("=== Iniciando o Sistema IntegraSaude (Modo Teste de Regras) ===");
-
-        // Instancia os serviços
-        MedicamentoService medicamentoService = new MedicamentoService();
-        ConsultaService consultaService = new ConsultaService();
-
         try {
-            // Testando a validação de Medicamento
-            System.out.println("\nTestando validação de medicamento...");
-            medicamentoService.cadastrarMedicamento("", "500mg", "08:00");
-
-        } catch (ValidacaoException e) {
-            System.err.println("-> Sucesso! Erro capturado no medicamento: " + e.getMessage());
+            Aplicacao.executar(ConfiguracaoApp.carregar(args));
+        } catch (AppException e) {
+            // Erro de configuração ou de banco: mostra só a mensagem, sem stack trace
+            System.err.println("Erro: " + e.getMessage());
+            System.exit(CODIGO_ERRO);
         }
-
-        try {
-            // Testando a validação de Consulta
-            System.out.println("\nTestando validação de consulta...");
-            consultaService.cadastrarConsulta("", "Cardiologia", "2026-11-15 10:00");
-
-        } catch (ValidacaoException e) {
-            System.err.println("-> Sucesso! Erro capturado na consulta: " + e.getMessage());
-        }
-
-        System.out.println("\n=== Aplicação executada com sucesso! ===");
     }
 }
