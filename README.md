@@ -236,7 +236,3 @@ Exemplo: `feat: implementa servico de consultas`
 | Testes e qualidade | Testes JUnit (TDD) e revisão de PRs | `src/test/java` |
 | Banco de dados e CI | DER, scripts SQL, repositórios JDBC e GitHub Actions | `database/`, `.github/` |
 | Documentação e entregas | Documentos, apresentação, vídeo e README | `docs/`, `README.md` |
-
-<!-- Preencher: nomes e RAs dos integrantes -->
-
-Licença: MIT.
