@@ -74,6 +74,12 @@ public class LembreteRepositoryJdbc extends RepositorioJdbc implements LembreteR
     }
 
     @Override
+    public List<Lembrete> listarDoPaciente(Long pacienteId) {
+        return consultar(CONSULTA + "WHERE COALESCE(m.paciente_id, c.paciente_id) = ? "
+                + "ORDER BY l.horario_previsto", this::mapear, pacienteId);
+    }
+
+    @Override
     public List<Lembrete> listarPendentesAte(LocalDateTime limite) {
         return consultar(CONSULTA + "WHERE l.status = ? AND l.horario_previsto <= ? "
                 + "ORDER BY l.horario_previsto", this::mapear, StatusLembrete.PENDENTE, limite);

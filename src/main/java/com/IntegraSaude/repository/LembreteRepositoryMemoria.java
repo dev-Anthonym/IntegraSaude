@@ -4,6 +4,7 @@ import com.IntegraSaude.exception.RegistroDuplicadoException;
 import com.IntegraSaude.model.Lembrete;
 import com.IntegraSaude.model.TipoLembrete;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,13 @@ public class LembreteRepositoryMemoria implements LembreteRepository {
     @Override
     public List<Lembrete> listarPendentesDoPaciente(Long pacienteId) {
         return tabela.filtrar(l -> l.getPacienteId().equals(pacienteId) && l.estaPendente());
+    }
+
+    @Override
+    public List<Lembrete> listarDoPaciente(Long pacienteId) {
+        List<Lembrete> lista = tabela.filtrar(l -> l.getPacienteId().equals(pacienteId));
+        lista.sort(Comparator.comparing(Lembrete::getHorarioPrevisto));
+        return lista;
     }
 
     @Override

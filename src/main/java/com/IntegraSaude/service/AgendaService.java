@@ -35,14 +35,14 @@ public class AgendaService {
         // Doses dos medicamentos naquele dia
         for (Medicamento medicamento : medicamentos.listarPorPaciente(pacienteId)) {
             for (LocalDateTime horario : calculadora.horariosDoDia(medicamento, dia)) {
-                itens.add(new ItemAgenda(horario, TipoLembrete.MEDICAMENTO,
+                itens.add(new ItemAgenda(horario, TipoLembrete.MEDICAMENTO, medicamento.getId(),
                         "Tomar " + medicamento.getNome() + " (" + medicamento.getDosagem() + ")"));
             }
         }
         // Consultas naquele dia
         for (Consulta consulta : consultas.listarPorPaciente(pacienteId)) {
             if (consulta.estaAgendada() && consulta.getDataHora().toLocalDate().equals(dia)) {
-                itens.add(new ItemAgenda(consulta.getDataHora(), TipoLembrete.CONSULTA,
+                itens.add(new ItemAgenda(consulta.getDataHora(), TipoLembrete.CONSULTA, consulta.getId(),
                         "Consulta de " + consulta.getMedico().getEspecialidade().getNome()
                                 + " com " + consulta.getMedico().getNome() + " em " + consulta.getLocal()));
             }

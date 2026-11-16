@@ -48,4 +48,9 @@ public class ConsultaRepositoryMemoria implements ConsultaRepository {
         return tabela.filtrar(c -> c.getStatus() != StatusConsulta.CANCELADA
                 && c.getPacienteId().equals(pacienteId));
     }
+
+    @Override
+    public List<Consulta> listarTodasPorPaciente(Long pacienteId) {
+        return tabela.filtrar(c -> c.getPacienteId().equals(pacienteId));
+    }
 }

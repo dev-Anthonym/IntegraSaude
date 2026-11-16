@@ -74,6 +74,13 @@ public class ConsultaService {
                 .toList();
     }
 
+    // Todas as consultas do paciente, inclusive canceladas, ordenadas por data e hora
+    public List<Consulta> listarTodasDoPaciente(Long pacienteId) {
+        return consultas.listarTodasPorPaciente(pacienteId).stream()
+                .sorted(Comparator.comparing(Consulta::getDataHora))
+                .toList();
+    }
+
     // Mesmo paciente não pode ter duas consultas no mesmo horário (pacientes diferentes podem)
     private void validarConflito(Consulta consulta, Long idIgnorado) {
         consultas.buscarPorPacienteEHorario(consulta.getPacienteId(), consulta.getDataHora())
