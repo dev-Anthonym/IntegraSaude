@@ -24,14 +24,20 @@ import com.IntegraSaude.ui.MenuUsuarios;
 import com.IntegraSaude.ui.NotificadorConsole;
 import com.IntegraSaude.ui.SaidaConsole;
 import com.IntegraSaude.ui.SelecaoPaciente;
+import com.IntegraSaude.web.ServidorWeb;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 /**
- * Monta todas as dependências (a "fiação" do sistema), inicia o agendador e abre o menu.
- * É aqui que se troca repositório em memória por SQLite.
+ * Monta todas as dependências (a "fiação" do sistema), inicia o agendador e abre o menu de console
+ * ou, com --web, o servidor do frontend. É aqui que se troca repositório em memória por SQLite.
  */
 public final class Aplicacao {
 
@@ -74,7 +80,54 @@ public final class Aplicacao {
         if (configuracao.carregarDemonstracao()) {
             saida.exibir(demonstracao.carregar());
         }
-        executarMenu(saida, servicos, demonstracao, agendador);
+        if (configuracao.modoWeb()) {
+            executarWeb(configuracao, saida, servicos, agendador);
+        } else {
+            executarMenu(saida, servicos, demonstracao, agendador);
+        }
+    }
+
+    // Modo --web: sobe o servidor HTTP e fica rodando até ENTER ou Ctrl+C
+    private static void executarWeb(ConfiguracaoApp configuracao, SaidaConsole saida, Servicos servicos,
+                                    AgendadorLembretes agendador) {
+        ServidorWeb servidor = new ServidorWeb(servicos, configuracao.portaWeb());
+        CountDownLatch encerrar = new CountDownLatch(1);
+        Thread ganchoDesligamento = new Thread(() -> {
+            servidor.parar();
+            agendador.parar();
+        }, "desligamento-web");
+        Runtime.getRuntime().addShutdownHook(ganchoDesligamento);
+
+        agendador.iniciar();
+        servidor.iniciar();
+        saida.exibir("IntegraSaude web rodando em " + servidor.endereco());
+        saida.exibir("Pressione ENTER (ou Ctrl+C) para encerrar.");
+        aguardarEnter(encerrar);
+        try {
+            encerrar.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        Runtime.getRuntime().removeShutdownHook(ganchoDesligamento);
+        servidor.parar();
+        agendador.parar();
+        saida.exibir("Servidor encerrado. Ate logo!");
+    }
+
+    // Lê o teclado em segundo plano; sem entrada (ex.: rodando em segundo plano) segue até o Ctrl+C
+    private static void aguardarEnter(CountDownLatch encerrar) {
+        Thread leitor = new Thread(() -> {
+            try {
+                BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+                if (teclado.readLine() != null) {
+                    encerrar.countDown();
+                }
+            } catch (IOException e) {
+                // Sem teclado disponível: o servidor continua até o Ctrl+C
+            }
+        }, "leitor-enter");
+        leitor.setDaemon(true);
+        leitor.start();
     }
 
     // Monta os menus, inicia o agendador, abre o menu e garante o shutdown no fim
