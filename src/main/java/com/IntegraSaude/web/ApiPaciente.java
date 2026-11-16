@@ -106,12 +106,11 @@ final class ApiPaciente {
                 .toList();
     }
 
-    // Horários de hoje; fora do período, os do dia mais próximo dentro dele
+    // Horários de um dia cheio do tratamento: hoje, ou o dia seguinte ao início (no primeiro dia a
+    // sequência só começa no primeiro horário). Fora do período, o último dia dele.
     private List<String> horariosDeReferencia(Medicamento medicamento, LocalDate hoje) {
-        LocalDate dia = hoje;
-        if (dia.isBefore(medicamento.getDataInicio())) {
-            dia = medicamento.getDataInicio();
-        } else if (dia.isAfter(medicamento.getDataFim())) {
+        LocalDate dia = hoje.isAfter(medicamento.getDataInicio()) ? hoje : medicamento.getDataInicio().plusDays(1);
+        if (dia.isAfter(medicamento.getDataFim())) {
             dia = medicamento.getDataFim();
         }
         return servicos.calculadora().horariosDoDia(medicamento, dia).stream()

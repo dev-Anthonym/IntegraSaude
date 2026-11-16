@@ -78,9 +78,16 @@ final class ApiResponsavel {
             for (Lembrete perdido : visao.perdidosDoDia(dados, hoje)) {
                 itens.add(visao.detalhar(dados, perdido));
             }
-            itens.addAll(visao.pendentes(dados));
+            // Pendente cujo horário ainda não chegou aparece como "Em breve"
+            for (Map<String, Object> pendente : visao.pendentes(dados)) {
+                if (!Boolean.TRUE.equals(pendente.get("devido"))) {
+                    pendente.put("status", VisaoLembretes.EM_BREVE);
+                }
+                itens.add(pendente);
+            }
+            // Doses de hoje cujo lembrete ainda nem foi gerado
             for (Map<String, Object> item : visao.itensDoDia(dados, hoje)) {
-                if (VisaoLembretes.EM_BREVE.equals(item.get("status"))) {
+                if (VisaoLembretes.EM_BREVE.equals(item.get("status")) && item.get("lembreteId") == null) {
                     itens.add(Json.objeto(
                             "paciente", dados.paciente().getNome(),
                             "primeiroNome", VisaoLembretes.primeiroNome(dados.paciente().getNome()),

@@ -92,8 +92,11 @@ final class VisaoLembretes {
             if (item.tipo() == TipoLembrete.MEDICAMENTO) {
                 Medicamento medicamento = dados.medicamentos().get(item.itemId());
                 Optional<Lembrete> lembrete = lembreteDo(dados, item);
-                String status = lembrete.map(l -> l.getStatus().name())
-                        .orElse(item.dataHora().isAfter(agora) ? EM_BREVE : SEM_REGISTRO);
+                // Antes do horário a dose aparece "Em breve", mesmo que o lembrete já tenha sido gerado
+                boolean futuro = item.dataHora().isAfter(agora);
+                String status = lembrete.filter(l -> !(futuro && l.estaPendente()))
+                        .map(l -> l.getStatus().name())
+                        .orElse(futuro ? EM_BREVE : SEM_REGISTRO);
                 String nome = medicamento == null ? item.descricao() : medicamento.getNome();
                 itens.add(Json.objeto(
                         "hora", hora(item.dataHora()),
