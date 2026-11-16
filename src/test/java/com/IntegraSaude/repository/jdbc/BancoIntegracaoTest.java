@@ -109,6 +109,33 @@ class BancoIntegracaoTest {
     }
 
     @Test
+    void deveListarTodosOsLembretesEConsultasDoPacienteNoSqlite() throws Exception {
+        try (Connection conexao = abrirBanco(novoArquivo())) {
+            CenarioTeste c = cenario(conexao, new ConfiguracaoLembretes(30, 60));
+            Usuario paciente = c.criarPaciente("p@email.com");
+            c.medicamentos.cadastrar(c.medicamento(paciente.getId(), 12, LocalTime.of(12, 0)));
+            List<Lembrete> gerados = c.gerador.gerarDoDia(paciente.getId(), CenarioTeste.AGORA.toLocalDate());
+            c.lembretes.confirmar(paciente.getId(), gerados.get(0).getId());
+
+            // Confirmados e pendentes juntos, em ordem de horário (12:00 confirmado, 00:00 do dia seguinte não)
+            List<Lembrete> todos = c.lembretes.listarDoPaciente(paciente.getId());
+            assertEquals(gerados.size(), todos.size());
+            assertEquals(StatusLembrete.CONFIRMADO, todos.get(0).getStatus());
+
+            // A lista completa de consultas mantém as canceladas; a normal, não
+            Medico medico = c.criarMedico();
+            Consulta cancelada = c.consultas.cadastrar(c.consulta(paciente.getId(), medico,
+                    CenarioTeste.AGORA.plusDays(2)));
+            c.consultas.cadastrar(c.consulta(paciente.getId(), medico, CenarioTeste.AGORA.plusDays(3)));
+            c.consultas.cancelar(paciente.getId(), cancelada.getId());
+            assertEquals(1, c.consultas.listarDoPaciente(paciente.getId()).size());
+            List<Consulta> todas = c.consultas.listarTodasDoPaciente(paciente.getId());
+            assertEquals(2, todas.size());
+            assertEquals(StatusConsulta.CANCELADA, todas.get(0).getStatus());
+        }
+    }
+
+    @Test
     void deveRodarOFluxoCompletoDeLembreteEAlertaComSqlite() throws Exception {
         try (Connection conexao = abrirBanco(novoArquivo())) {
             CenarioTeste c = cenario(conexao, new ConfiguracaoLembretes(30, 60));
