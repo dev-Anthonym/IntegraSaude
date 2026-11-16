@@ -11,25 +11,8 @@ import com.IntegraSaude.repository.jdbc.InicializadorBanco;
 import com.IntegraSaude.repository.jdbc.RepositoriosJdbc;
 import com.IntegraSaude.scheduler.AgendadorLembretes;
 import com.IntegraSaude.scheduler.VerificadorLembretes;
-import com.IntegraSaude.service.AgendaService;
-import com.IntegraSaude.service.AlertaService;
-import com.IntegraSaude.service.AutenticacaoService;
-import com.IntegraSaude.service.CalculadoraHorarios;
-import com.IntegraSaude.service.ConsultaService;
-import com.IntegraSaude.service.EnderecoService;
-import com.IntegraSaude.service.EspecialidadeService;
-import com.IntegraSaude.service.GeradorLembretes;
-import com.IntegraSaude.service.HistoricoService;
-import com.IntegraSaude.service.LembreteService;
-import com.IntegraSaude.service.MedicamentoService;
-import com.IntegraSaude.service.MedicoService;
-import com.IntegraSaude.service.SenhaService;
+import com.IntegraSaude.service.Servicos;
 import com.IntegraSaude.service.SessaoUsuario;
-import com.IntegraSaude.service.UsuarioService;
-import com.IntegraSaude.service.ValidadorConsulta;
-import com.IntegraSaude.service.ValidadorMedicamento;
-import com.IntegraSaude.service.ValidadorUsuario;
-import com.IntegraSaude.service.VinculoService;
 import com.IntegraSaude.ui.DadosDemonstracao;
 import com.IntegraSaude.ui.LeitorConsole;
 import com.IntegraSaude.ui.MenuAgenda;
@@ -71,65 +54,44 @@ public final class Aplicacao {
         }
     }
 
-    // Cria serviços, agendador e menus com os repositórios recebidos
+    // Cria serviços, agendador e dados de demonstração com os repositórios recebidos
     private static void rodar(ConfiguracaoApp configuracao, Repositorios repos) {
         Clock relogio = Clock.systemDefaultZone();
         SaidaConsole saida = new SaidaConsole(System.out);
-        LeitorConsole leitor = new LeitorConsole(new Scanner(System.in), saida);
         NotificadorConsole notificador = new NotificadorConsole(saida);
-
-        // Serviços de usuário
-        SenhaService senhas = new SenhaService();
-        UsuarioService usuarios = new UsuarioService(repos.usuarios(), new ValidadorUsuario(), senhas);
-        AutenticacaoService autenticacao = new AutenticacaoService(repos.usuarios(), senhas);
-        VinculoService vinculos = new VinculoService(repos.vinculos(), repos.usuarios());
-        SessaoUsuario sessao = new SessaoUsuario();
-
-        // Serviços de medicamentos, consultas e agenda
-        CalculadoraHorarios calculadora = new CalculadoraHorarios();
-        MedicamentoService medicamentos = new MedicamentoService(repos.medicamentos(), repos.usuarios(),
-                repos.lembretes(), new ValidadorMedicamento(relogio));
-        EspecialidadeService especialidades = new EspecialidadeService(repos.especialidades());
-        MedicoService medicos = new MedicoService(repos.medicos(), repos.especialidades());
-        ConsultaService consultas = new ConsultaService(repos.consultas(), repos.usuarios(),
-                repos.lembretes(), new ValidadorConsulta(relogio), relogio);
-        AgendaService agenda = new AgendaService(repos.medicamentos(), repos.consultas(), calculadora);
-
-        // Serviços de lembretes, alerta e histórico
-        HistoricoService historico = new HistoricoService(repos.historico(), relogio);
-        LembreteService lembretes = new LembreteService(repos.lembretes(), historico, relogio,
-                configuracao.lembretes());
-        GeradorLembretes gerador = new GeradorLembretes(repos.medicamentos(), repos.consultas(),
-                repos.lembretes(), calculadora, historico, relogio, configuracao.lembretes());
-        AlertaService alertas = new AlertaService(repos.lembretes(), vinculos, usuarios, historico, notificador);
+        Servicos servicos = Servicos.montar(repos, configuracao.lembretes(), relogio, notificador,
+                new ViaCepClient());
 
         // Agendador em segundo plano
-        VerificadorLembretes verificador = new VerificadorLembretes(usuarios, gerador, lembretes, alertas, notificador);
+        VerificadorLembretes verificador = new VerificadorLembretes(servicos.usuarios(), servicos.gerador(),
+                servicos.lembretes(), servicos.alertas(), notificador);
         AgendadorLembretes agendador = new AgendadorLembretes(verificador::verificar, relogio,
                 configuracao.intervaloAgendadorSegundos());
 
-        // Menus
-        SelecaoPaciente selecao = new SelecaoPaciente(sessao, vinculos, leitor, saida);
-        DadosDemonstracao demonstracao = new DadosDemonstracao(usuarios, vinculos, medicamentos,
-                especialidades, medicos, consultas, relogio);
-        MenuPrincipal menu = new MenuPrincipal(leitor, saida, sessao,
-                new MenuUsuarios(leitor, saida, usuarios, autenticacao, vinculos, sessao),
-                new MenuMedicamentos(leitor, saida, medicamentos, sessao),
-                new MenuConsultas(leitor, saida, consultas, especialidades, medicos,
-                        new EnderecoService(new ViaCepClient()), sessao),
-                new MenuLembretes(leitor, saida, lembretes, historico, sessao, selecao),
-                new MenuAgenda(leitor, saida, agenda, selecao), demonstracao);
-
-        executarMenu(configuracao, saida, demonstracao, agendador, menu);
-    }
-
-    // Carrega a demonstração (se pedido), inicia o agendador, abre o menu e garante o shutdown no fim
-    private static void executarMenu(ConfiguracaoApp configuracao, SaidaConsole saida,
-                                     DadosDemonstracao demonstracao, AgendadorLembretes agendador,
-                                     MenuPrincipal menu) {
+        DadosDemonstracao demonstracao = new DadosDemonstracao(servicos.usuarios(), servicos.vinculos(),
+                servicos.medicamentos(), servicos.especialidades(), servicos.medicos(), servicos.consultas(),
+                relogio);
         if (configuracao.carregarDemonstracao()) {
             saida.exibir(demonstracao.carregar());
         }
+        executarMenu(saida, servicos, demonstracao, agendador);
+    }
+
+    // Monta os menus, inicia o agendador, abre o menu e garante o shutdown no fim
+    private static void executarMenu(SaidaConsole saida, Servicos servicos, DadosDemonstracao demonstracao,
+                                     AgendadorLembretes agendador) {
+        LeitorConsole leitor = new LeitorConsole(new Scanner(System.in), saida);
+        SessaoUsuario sessao = new SessaoUsuario();
+        SelecaoPaciente selecao = new SelecaoPaciente(sessao, servicos.vinculos(), leitor, saida);
+        MenuPrincipal menu = new MenuPrincipal(leitor, saida, sessao,
+                new MenuUsuarios(leitor, saida, servicos.usuarios(), servicos.autenticacao(),
+                        servicos.vinculos(), sessao),
+                new MenuMedicamentos(leitor, saida, servicos.medicamentos(), sessao),
+                new MenuConsultas(leitor, saida, servicos.consultas(), servicos.especialidades(),
+                        servicos.medicos(), servicos.enderecos(), sessao),
+                new MenuLembretes(leitor, saida, servicos.lembretes(), servicos.historico(), sessao, selecao),
+                new MenuAgenda(leitor, saida, servicos.agenda(), selecao), demonstracao);
+
         agendador.iniciar();
         try {
             menu.executar();
