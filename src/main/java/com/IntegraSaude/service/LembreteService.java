@@ -50,6 +50,11 @@ public class LembreteService {
                 .toList();
     }
 
+    // Todos os lembretes do paciente (pendentes, confirmados e perdidos), pelo horário previsto
+    public List<Lembrete> listarDoPaciente(Long pacienteId) {
+        return repositorio.listarDoPaciente(pacienteId);
+    }
+
     // Pendentes (de todos os pacientes) cujo horário já chegou: usado para avisar o paciente
     public List<Lembrete> listarDevidos(LocalDateTime agora) {
         return repositorio.listarPendentesAte(agora);

@@ -20,4 +20,7 @@ public interface ConsultaRepository {
 
     // Consultas do paciente, exceto as CANCELADAS
     List<Consulta> listarPorPaciente(Long pacienteId);
+
+    // Todas as consultas do paciente, inclusive as CANCELADAS (para exibir o histórico)
+    List<Consulta> listarTodasPorPaciente(Long pacienteId);
 }

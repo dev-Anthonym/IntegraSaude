@@ -56,6 +56,11 @@ public class ConsultaRepositoryJdbc extends RepositorioJdbc implements ConsultaR
                 this::mapear, pacienteId, StatusConsulta.CANCELADA);
     }
 
+    @Override
+    public List<Consulta> listarTodasPorPaciente(Long pacienteId) {
+        return consultar(CONSULTA + "WHERE c.paciente_id = ? ORDER BY c.data_hora", this::mapear, pacienteId);
+    }
+
     private Consulta mapear(ResultSet linha) throws SQLException {
         return comId(new Consulta(linha.getLong("paciente_id"), MedicoRepositoryJdbc.mapearMedico(linha),
                 linha.getString("local"), LocalDateTime.parse(linha.getString("data_hora")),

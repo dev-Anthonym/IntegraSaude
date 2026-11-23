@@ -32,6 +32,7 @@ Esquecer uma dose ou uma consulta é comum e, para quem faz tratamento contínuo
 - **Histórico:** todo evento (gerado, confirmado, perdido, alerta enviado) com data e hora, consultável por paciente e por período.
 - **Agenda do dia e da semana:** medicamentos e consultas juntos, em ordem de horário.
 - **Busca de endereço por CEP (opcional):** integração com a API ViaCEP; se a API falhar, o endereço é digitado à mão.
+- **Duas interfaces:** menu de console (padrão) ou frontend web no navegador (`--web`), as duas usando os mesmos serviços e regras.
 
 ## Tecnologias
 
@@ -41,6 +42,8 @@ Esquecer uma dose ou uma consulta é comum e, para quem faz tratamento contínuo
 | Maven | build, testes e execução (`mvn exec:java`) |
 | SQLite | persistência em arquivo, via `sqlite-jdbc` |
 | JUnit 5 | testes unitários e de integração |
+| `com.sun.net.httpserver` (JDK) | servidor do modo web, sem dependência nova |
+| HTML, CSS e JavaScript puros | frontend web (fontes Nunito e Public Sans, via Google Fonts) |
 | GitHub Actions | CI: testes + validação do script SQL |
 
 ## Como rodar
@@ -53,7 +56,19 @@ cd IntegraSaude
 
 mvn test                 # roda todos os testes
 mvn compile exec:java    # abre a aplicação (cria database/integrasaude.db na primeira vez)
+mvn compile exec:java -Dexec.args="--web"   # abre o frontend em http://localhost:8080/
 ```
+
+### Modo web
+
+Com `--web`, em vez do menu de console sobe um servidor HTTP local (só aceita conexões de `localhost`). Abra o endereço mostrado no terminal; para encerrar, pressione ENTER ou Ctrl+C. O agendador de lembretes roda do mesmo jeito que no console.
+
+| Perfil | Abas |
+| --- | --- |
+| Paciente | Agenda (dia e semana), Lembretes (pendentes e histórico), Remédios, Consultas, Responsáveis |
+| Responsável | Pacientes, Lembretes (em aberto e histórico), Agenda (dia e semana) |
+
+As telas de acompanhamento se atualizam sozinhas a cada 20 segundos. Os arquivos da página ficam em `src/main/resources/web/` e a API JSON (em `/api/`) fica no pacote `web`, que só chama os serviços.
 
 ### Argumentos
 
@@ -66,6 +81,8 @@ Passe com `-Dexec.args="..."`, por exemplo `mvn compile exec:java -Dexec.args="-
 | `--tempo-limite=N` | Minutos até um lembrete pendente virar `PERDIDO` (padrão 30) |
 | `--intervalo=N` | Segundos entre as verificações do agendador (padrão 30) |
 | `--banco=caminho/arquivo.db` | Arquivo do SQLite (padrão `database/integrasaude.db`) |
+| `--web` | Abre o frontend web no navegador em vez do menu de console |
+| `--porta=N` | Porta do modo web (padrão 8080, ou `web.porta` no `config.properties`) |
 
 Os valores padrão também podem ser alterados em `src/main/resources/config.properties`.
 
@@ -83,12 +100,14 @@ mvn compile exec:java -Dexec.args="--demo"
 
 > Para ver o caminho feliz, confirme o lembrete em **Lembretes e histórico → Confirmar dose/consulta** antes do prazo.
 
+**Mesma demonstração no navegador:** `mvn compile exec:java -Dexec.args="--demo --web"`, abra `http://localhost:8080/` e entre como Maria. Na aba **Agenda** aparece o cartão **Agora** com o botão **Confirmar**; se o prazo passar, entre como João (outra janela anônima ou depois de **Sair**) e veja o alerta em **Pacientes** e o lembrete perdido em **Lembretes**.
+
 ## Arquitetura
 
 O código é dividido em camadas. Cada camada só conhece as de baixo:
 
 ```
-ui  →  service  →  repository (interfaces)  →  repository.jdbc (SQLite) / memória
+ui / web  →  service  →  repository (interfaces)  →  repository.jdbc (SQLite) / memória
                ↘  model, exception (não dependem de nada)
 scheduler  →  service
 ```
@@ -96,6 +115,7 @@ scheduler  →  service
 | Pacote | Responsabilidade |
 | --- | --- |
 | `ui` | Menus do console e leitura de entrada (`Scanner`). Não tem regra de negócio |
+| `web` | Servidor HTTP do modo `--web`, sessões por navegador e API JSON. Não tem regra de negócio |
 | `service` | Regras de negócio, validações e orquestração |
 | `scheduler` | Verificação periódica em segundo plano (gera lembretes, marca perdidos, alerta) |
 | `repository` | Interfaces de acesso a dados e versões em memória |
@@ -115,8 +135,8 @@ IntegraSaude/
 ├── src/main/java/com/IntegraSaude/
 │   ├── Main.java, Aplicacao.java
 │   ├── config/  exception/  integracao/  model/
-│   ├── repository/ (+ jdbc/)  scheduler/  service/  ui/
-├── src/main/resources/ config.properties
+│   ├── repository/ (+ jdbc/)  scheduler/  service/  ui/  web/
+├── src/main/resources/ config.properties e web/ (index.html, estilo.css, app.js)
 ├── src/test/java/      testes JUnit 5
 └── pom.xml
 ```
@@ -188,6 +208,7 @@ mvn test
 
 - **Unitários (JUnit 5):** validações, senha/login, vínculo, cálculo de horários (incluindo a virada de dia), consultas, máquina de estados do lembrete, geração sem duplicados, alerta, histórico, agenda e agendador. Usam repositórios em memória e um relógio controlado, sem esperar tempo real.
 - **Integração com SQLite:** `BancoIntegracaoTest` roda o fluxo completo (lembrete perdido → alerta → histórico) contra os scripts reais de `database/`, em arquivo temporário, e confere persistência, chaves estrangeiras, unicidade e leitura dos dados de demonstração do script `06`.
+- **Modo web:** `ServidorWebTest` sobe o servidor numa porta livre e faz requisições HTTP reais (login, permissões por perfil, proteção de POST, cadastros, CEP com cliente falso, UTF-8 e o alerta visto pelo responsável).
 - **Pipeline (`.github/workflows/ci.yml`):** roda `mvn test` com JDK 25 e valida o script único do banco em um SQLite vazio.
 
 ## Como contribuir

@@ -13,10 +13,15 @@ import java.util.Properties;
  * Configuração da aplicação. Prioridade: argumento de linha de comando, depois modo --demo,
  * depois config.properties, depois o valor padrão.
  *
- * Argumentos aceitos: --demo, --memoria, --tempo-limite=N, --intervalo=N, --banco=caminho/arquivo.db
+ * Argumentos aceitos: --demo, --memoria, --tempo-limite=N, --intervalo=N, --banco=caminho/arquivo.db,
+ * --web (abre o frontend no navegador em vez do menu de console) e --porta=N (porta do modo web)
  */
 public record ConfiguracaoApp(ConfiguracaoLembretes lembretes, int intervaloAgendadorSegundos,
-                              String caminhoBanco, boolean usarMemoria, boolean carregarDemonstracao) {
+                              String caminhoBanco, boolean usarMemoria, boolean carregarDemonstracao,
+                              boolean modoWeb, int portaWeb) {
+
+    public static final int PORTA_WEB_PADRAO = 8080;
+    private static final int PORTA_MAXIMA = 65_535;
 
     private static final String ARQUIVO_PROPRIEDADES = "/config.properties";
     private static final String PREFIXO_ARGUMENTO = "--";
@@ -39,10 +44,22 @@ public record ConfiguracaoApp(ConfiguracaoLembretes lembretes, int intervaloAgen
                 demo ? INTERVALO_DEMO : propriedades.getProperty("agendador.intervalo-segundos", "30"));
         String banco = argumentos.getOrDefault("banco",
                 propriedades.getProperty("banco.caminho", ConexaoBanco.CAMINHO_PADRAO));
+        String porta = argumentos.getOrDefault("porta",
+                propriedades.getProperty("web.porta", String.valueOf(PORTA_WEB_PADRAO)));
 
         return new ConfiguracaoApp(
                 new ConfiguracaoLembretes(inteiro(tempoLimite, "tempo-limite"), inteiro(antecedencia, "antecedencia")),
-                inteiro(intervalo, "intervalo"), banco, argumentos.containsKey("memoria"), demo);
+                inteiro(intervalo, "intervalo"), banco, argumentos.containsKey("memoria"), demo,
+                argumentos.containsKey("web"), porta(porta));
+    }
+
+    // Porta TCP válida (0 deixa o sistema escolher uma porta livre)
+    private static int porta(String valor) {
+        int numero = inteiro(valor, "porta");
+        if (numero < 0 || numero > PORTA_MAXIMA) {
+            throw new DadoInvalidoException("Valor invalido para porta: " + valor);
+        }
+        return numero;
     }
 
     // Transforma "--chave=valor" e "--chave" em um mapa

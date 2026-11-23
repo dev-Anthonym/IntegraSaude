@@ -22,6 +22,9 @@ public interface LembreteRepository {
 
     List<Lembrete> listarPendentesDoPaciente(Long pacienteId);
 
+    // Todos os lembretes do paciente (qualquer status), ordenados pelo horário previsto
+    List<Lembrete> listarDoPaciente(Long pacienteId);
+
     // Pendentes de todos os pacientes cujo horário previsto é anterior ou igual ao limite
     List<Lembrete> listarPendentesAte(LocalDateTime limite);
 
